@@ -1,12 +1,16 @@
 class Wizard extends Phaser.Scene {
     constructor() {
         super("wizardScene");
-        this.gameOver = this.gameOver.bind(this);
-        this.win = this.win.bind(this);
-
+        this.my = {sprite: {}};
     }
     preload(){
-        this.preload.setPath("./assets/");
-        
+        this.load.setPath("./assets/");
+        //load background
+    }
+    create(){
+
+    }
+    update() {
+
     }
 }
