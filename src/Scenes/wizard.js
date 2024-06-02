@@ -8,7 +8,8 @@ class Wizard extends Phaser.Scene {
         //load background
     }
     create(){
-
+        let my = this.my;
+        
     }
     update() {
 
