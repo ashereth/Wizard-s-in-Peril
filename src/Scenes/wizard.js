@@ -50,12 +50,16 @@ class Wizard extends Phaser.Scene {
             this.gameOver(this.playerScore);
         }
         if(cursors.left.isDown){
+            this.my.sprite.player.scaleX = -1; // Flip horizontally
+            this.my.sprite.player.body.offset.x = this.my.sprite.player.width;
             this.my.sprite.player.x -= this.playerSpeed;
             if (this.my.sprite.player.x<this.my.sprite.player.width) {
                 this.my.sprite.player.x = this.my.sprite.player.width;
             }
         }
         if(cursors.right.isDown){
+            this.my.sprite.player.scaleX = 1; // Flip horizontally
+            this.my.sprite.player.body.offset.x = 0;
             this.my.sprite.player.x += this.playerSpeed;
             if (this.my.sprite.player.x>this.mapWidth - this.my.sprite.player.width) {
                 this.my.sprite.player.x = this.mapWidth - this.my.sprite.player.width;
