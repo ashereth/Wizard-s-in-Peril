@@ -98,6 +98,8 @@ class Wizard extends Phaser.Scene {
 
         // Handle mouse click to shoot
         this.input.on('pointerdown', this.shootBullet, this);
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
     }
     update() {
 
@@ -139,5 +141,14 @@ class Wizard extends Phaser.Scene {
                 bullet.destroy();
             }
         }, this);
+
+        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+            this.scene.launch('PopupScene', { playerSpeed: this.playerSpeed });
+            this.scene.pause();
+        }
+    }
+
+    updatePlayerSpeed(newSpeed) {
+        this.playerSpeed = newSpeed;
     }
 }
