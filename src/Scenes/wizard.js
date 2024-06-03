@@ -53,7 +53,7 @@ class Wizard extends Phaser.Scene {
         //how large the bullets ares
         this.bulletScale = .2;
         //how many bullets get shot each click
-        this.numBullets = 10;
+        this.numBullets = 1;
 
     }
 
