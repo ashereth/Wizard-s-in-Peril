@@ -44,6 +44,8 @@ class Wizard extends Phaser.Scene {
 
         // set up Phaser-provided cursor key input
         cursors = this.input.keyboard.createCursorKeys();
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
     }
     update() {
         if (this.playerHealth === 0) {
@@ -73,5 +75,14 @@ class Wizard extends Phaser.Scene {
                 this.my.sprite.player.y = this.mapHeight - this.my.sprite.player.height;
             }
         }
+
+        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+            this.scene.launch('PopupScene', { playerSpeed: this.playerSpeed });
+            this.scene.pause();
+        }
+    }
+
+    updatePlayerSpeed(newSpeed) {
+        this.playerSpeed = newSpeed;
     }
 }
