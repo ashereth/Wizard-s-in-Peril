@@ -47,6 +47,7 @@ class Wizard extends Phaser.Scene {
         this.load.tilemapTiledJSON("Background-Map", "Background-Map.tmj");   // Tilemap in JSON
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
+        this.load.image("collectable", 'Tiles/laserBlue08.png')
         this.init();
         document.getElementById('description').innerHTML = `<h1>Player Health = 10<h1><h1>Player Level = 0<h1>`
 
@@ -112,6 +113,8 @@ class Wizard extends Phaser.Scene {
         });
         // Create a group for cyclops enemies
         this.cyclopsGroup = this.physics.add.group();
+        //create a group for collectable stuff to be dropped when an enemy dies
+        this.collectableGroup = this.physics.add.group();
 
         // Handle mouse click to shoot
         this.input.on('pointerdown', this.shootBullet, this);
@@ -130,6 +133,18 @@ class Wizard extends Phaser.Scene {
 
         // Add collision detection between cyclops and player
         this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitCyclops, null, this);
+
+        //player can pick up collectables
+        this.physics.add.overlap(my.sprite.player, this.collectableGroup, (player, collectable) => {
+            collectable.destroy();
+            this.playerScore += 10;
+        });
+
+        // debug key listener (assigned to F key)
+        this.input.keyboard.on('keydown-F', function() {
+            this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
+            this.physics.world.debugGraphic.clear()
+        }, this)
 
     }
     update() {
@@ -227,6 +242,14 @@ class Wizard extends Phaser.Scene {
         cyclops.hitsLeft = this.cyclopsHitsToDestroy;
     }
 
+    enemyDeath(enemy){
+        let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
+        collectable.setActive(true);
+        collectable.setVisible(true);
+        collectable.body.setAllowGravity(false);
+        collectable.setScale(.2);
+    }
+
     hitCyclops(bullet, cyclops) {
         bullet.setActive(false);
         bullet.setVisible(false);
@@ -234,6 +257,8 @@ class Wizard extends Phaser.Scene {
 
         cyclops.hitsLeft -= this.damage;
         if (cyclops.hitsLeft <= 0) {
+            //cyclops spaws consumable when dead
+            this.enemyDeath(cyclops);
             cyclops.setActive(false);
             cyclops.setVisible(false);
             cyclops.destroy();
