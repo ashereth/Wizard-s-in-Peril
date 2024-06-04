@@ -3,6 +3,7 @@ class Wizard extends Phaser.Scene {
         super("wizardScene");
         this.gameOver = this.gameOver.bind(this);
         this.my = { sprite: {} };
+        this.cyclopsGroup = null;
     }
     //send player to game over scene
     gameOver(score) {
@@ -45,6 +46,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("bullet", 'Tiles/dotGreen.png');
         this.load.tilemapTiledJSON("Background-Map", "Background-Map.tmj");   // Tilemap in JSON
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
+        this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         //set initial player values
         this.playerHealth = 10;
         this.playerScore = 10;
@@ -62,6 +64,10 @@ class Wizard extends Phaser.Scene {
         this.mapHeight = 16 * 30;
         this.playerSpeed = 1.5;
         this.SCALE = .75;
+        this.cyclopsSCALE = 1.25;
+        this.cyclopsSpawnRate = 1000;
+        this.cyclopsHitsToDestroy = 3;
+        this.cyclopsSpeed = 50;
     }
     create() {
         let my = this.my;
@@ -95,11 +101,23 @@ class Wizard extends Phaser.Scene {
             defaultKey: 'bullet',
             maxSize: 50,
         });
+        // Create a group for cyclops enemies
+        this.cyclopsGroup = this.physics.add.group();
 
         // Handle mouse click to shoot
         this.input.on('pointerdown', this.shootBullet, this);
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+        // Spawn an enemy cyclops 
+        this.time.addEvent({
+            delay: this.cyclopsSpawnRate,
+            callback: this.spawnCyclops,
+            callbackScope: this,
+            loop: true
+        });
+
+        // Add collision detection between bullets and cyclops
+        this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitCyclops, null, this);
     }
     update() {
 
@@ -142,6 +160,15 @@ class Wizard extends Phaser.Scene {
             }
         }, this);
 
+        // Makes cyclops move towards player
+        this.cyclopsGroup.children.each(cyclops => {
+            if (cyclops.active) {
+                let direction = new Phaser.Math.Vector2(this.my.sprite.player.x - cyclops.x, this.my.sprite.player.y - cyclops.y);
+                direction.normalize();
+                cyclops.setVelocity(direction.x * this.cyclopsSpeed, direction.y * this.cyclopsSpeed);
+            }
+        }, this);
+
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
             this.scene.launch('PopupScene', { playerSpeed: this.playerSpeed });
             this.scene.pause();
@@ -150,5 +177,35 @@ class Wizard extends Phaser.Scene {
 
     updatePlayerSpeed(newSpeed) {
         this.playerSpeed = newSpeed;
+    }
+
+    spawnCyclops() {
+        let positions = [
+            { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
+            { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
+            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(-50, 0) },
+            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(this.mapHeight, this.mapHeight + 50) }
+        ];
+        let pos = Phaser.Utils.Array.GetRandom(positions);
+        let cyclops = this.cyclopsGroup.create(pos.x, pos.y, 'cyclops');
+        cyclops.setScale(this.cyclopsSCALE);
+        cyclops.setActive(true);
+        cyclops.setVisible(true);
+        cyclops.body.setAllowGravity(false);
+        cyclops.hitsLeft = this.cyclopsHitsToDestroy;
+    }
+
+    hitCyclops(bullet, cyclops) {
+        bullet.setActive(false);
+        bullet.setVisible(false);
+        bullet.destroy();
+
+        cyclops.hitsLeft--;
+        if (cyclops.hitsLeft <= 0) {
+            cyclops.setActive(false);
+            cyclops.setVisible(false);
+            cyclops.destroy();
+            this.playerScore += 10; // Increase player score when cyclops is destroyed
+        }
     }
 }
