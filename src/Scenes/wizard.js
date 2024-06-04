@@ -4,6 +4,7 @@ class Wizard extends Phaser.Scene {
         this.gameOver = this.gameOver.bind(this);
         this.my = { sprite: {} };
         this.cyclopsGroup = null;
+        this.isInvincible = false;
     }
     //send player to game over scene
     gameOver(score) {
@@ -47,6 +48,10 @@ class Wizard extends Phaser.Scene {
         this.load.tilemapTiledJSON("Background-Map", "Background-Map.tmj");   // Tilemap in JSON
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
+        this.init();
+    }
+
+    init() {
         //set initial player values
         this.playerHealth = 10;
         this.playerScore = 10;
@@ -57,9 +62,6 @@ class Wizard extends Phaser.Scene {
         //how many bullets get shot each click
         this.numBullets = 1;
 
-    }
-
-    init() {
         this.mapWidth = 16 * 30;
         this.mapHeight = 16 * 30;
         this.playerSpeed = 1.5;
@@ -69,6 +71,8 @@ class Wizard extends Phaser.Scene {
         this.cyclopsHitsToDestroy = 3;
         this.cyclopsSpeed = 50;
         this.damage = 1;
+        this.cyclopsDamage = 1;
+        this.invincibilityDuration = 300; 
     }
     create() {
         let my = this.my;
@@ -119,9 +123,15 @@ class Wizard extends Phaser.Scene {
 
         // Add collision detection between bullets and cyclops
         this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitCyclops, null, this);
+
+        // Add collision detection between cyclops and player
+        this.physics.add.overlap(this.my.sprite.player, this.cyclopsGroup, this.playerHitCyclops, null, this);
+
+        // Add text objects for health and score
+        this.healthText = this.add.text(100, 16, 'Health: ' + this.playerHealth, { fontSize: '32px', fill: '#FFF' }) // I can't get it to work with the camera with SetScrollFactor(0)
+        this.scoreText = this.add.text(300, 200, 'Score: ' + this.playerScore, { fontSize: '32px', fill: '#FFF' })
     }
     update() {
-
         //make sure player isnt dead
         if (this.playerHealth === 0) {
             this.gameOver(this.playerScore);
@@ -138,7 +148,7 @@ class Wizard extends Phaser.Scene {
             if (this.my.sprite.player.x > this.mapWidth - this.my.sprite.player.width) {
                 this.my.sprite.player.x = this.mapWidth - this.my.sprite.player.width;
             }
-        }
+        }  
         if (cursors.up.isDown || this.cursors.up.isDown) {
             this.my.sprite.player.y -= this.playerSpeed;
             if (this.my.sprite.player.y < this.my.sprite.player.height) {
@@ -207,6 +217,24 @@ class Wizard extends Phaser.Scene {
             cyclops.setVisible(false);
             cyclops.destroy();
             this.playerScore += 10; // Increase player score when cyclops is destroyed
+            this.scoreText.setText(`Score: ${this.playerScore}`); // Update score
+        }
+    }
+
+    playerHitCyclops(player, cyclops) {
+        if (!this.isInvincible) {
+            this.playerHealth -= this.cyclopsDamage;
+            this.healthText.setText(`Health: ${this.playerHealth}`); // Update Health
+            if (this.playerHealth <= 0) {
+                this.gameOver(this.playerScore);
+            } else {
+                this.isInvincible = true;
+                this.my.sprite.player.setTint(0xffffff); // Change color for invincibility. This does not work so we can just change this to audio later
+                this.time.delayedCall(this.invincibilityDuration, () => {
+                    this.isInvincible = false;
+                    this.my.sprite.player.clearTint(); // Reset player color. This wouldn't be needed later
+                }, [], this);
+            }
         }
     }
 }
