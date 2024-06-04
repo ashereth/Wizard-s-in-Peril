@@ -58,7 +58,7 @@ class Wizard extends Phaser.Scene {
         this.playerHealth = 10;
         this.playerScore = 0;
         //how may points to level up
-        this.scoreToLevel = 10;
+        this.scoreToLevel = 50;
         this.level = 1;
         //how fast the bullets travel
         this.bulletSpeed = 200;
