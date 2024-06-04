@@ -110,12 +110,16 @@ class Wizard extends Phaser.Scene {
         //movement controls
         if (cursors.left.isDown || this.cursors.left.isDown) {
             this.my.sprite.player.x -= this.playerSpeed;
+            this.my.sprite.player.scaleX = -1;
+            this.my.sprite.player.body.offset.x = this.my.sprite.player.width;
             if (this.my.sprite.player.x < this.my.sprite.player.width) {
                 this.my.sprite.player.x = this.my.sprite.player.width;
             }
         }
         if (cursors.right.isDown || this.cursors.right.isDown) {
             this.my.sprite.player.x += this.playerSpeed;
+            this.my.sprite.player.scaleX = 1;
+            this.my.sprite.player.body.offset.x = 0;
             if (this.my.sprite.player.x > this.mapWidth - this.my.sprite.player.width) {
                 this.my.sprite.player.x = this.mapWidth - this.my.sprite.player.width;
             }
