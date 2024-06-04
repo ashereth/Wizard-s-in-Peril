@@ -3,10 +3,21 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "",
+    "activeFile": "Background-Map.tmx",
     "expandedProjectPaths": [
     ],
     "fileStates": {
+        "Background-Map.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 119.5,
+                "y": -28
+            }
+        },
+        "Background-Map.tmx#rogue like tiles": {
+            "scaleInDock": 2
+        }
     },
     "last.exportedFilePath": "C:/Users/asher/OneDrive/Documents/GitHub/Wizard-s-in-Peril/assets",
     "last.imagePath": "C:/Users/asher/OneDrive/Documents/GitHub/Wizard-s-in-Peril/assets/Tilemap",
@@ -15,9 +26,11 @@
     "map.tileHeight": 16,
     "map.tileWidth": 16,
     "openFiles": [
+        "Background-Map.tmx"
     ],
     "project": "background.tiled-project",
     "recentFiles": [
+        "Background-Map.tmx"
     ],
     "tileset.embedInMap": true,
     "tileset.tileSize": {
