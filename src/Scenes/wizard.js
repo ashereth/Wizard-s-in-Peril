@@ -2,7 +2,6 @@ class Wizard extends Phaser.Scene {
     constructor() {
         super("wizardScene");
         this.gameOver = this.gameOver.bind(this);
-        this.my = { sprite: {} };
         this.cyclopsGroup = null;
         this.isInvincible = false;
     }
@@ -18,7 +17,7 @@ class Wizard extends Phaser.Scene {
             let delay = i * 100; // Delay each bullet by 100ms incrementally
 
             this.time.delayedCall(delay, () => {
-                let player = this.my.sprite.player;
+                let player = my.sprite.player;
                 let bullet = this.bullets.get(player.x, player.y);
                 if (bullet) {
                     bullet.displayWidth = bullet.width * this.bulletScale;
@@ -49,6 +48,9 @@ class Wizard extends Phaser.Scene {
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         this.init();
+        document.getElementById('description').innerHTML = `<h1>Player Health = 10<h1><h1>Player Score = 0<h1>`
+
+
     }
 
     init() {
@@ -72,10 +74,9 @@ class Wizard extends Phaser.Scene {
         this.cyclopsSpeed = 50;
         this.damage = 1;
         this.cyclopsDamage = 1;
-        this.invincibilityDuration = 300; 
+        this.invincibilityDuration = 300;
     }
     create() {
-        let my = this.my;
 
         this.map = this.add.tilemap("Background-Map", 16, 16, 30, 30);
         this.tileset = this.map.addTilesetImage("rogue like tiles", "tilemap_tiles");
@@ -125,44 +126,46 @@ class Wizard extends Phaser.Scene {
         this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitCyclops, null, this);
 
         // Add collision detection between cyclops and player
-        this.physics.add.overlap(this.my.sprite.player, this.cyclopsGroup, this.playerHitCyclops, null, this);
+        this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitCyclops, null, this);
 
-        // Add text objects for health and score
-        this.healthText = this.add.text(100, 16, 'Health: ' + this.playerHealth, { fontSize: '32px', fill: '#FFF' }) // I can't get it to work with the camera with SetScrollFactor(0)
-        this.scoreText = this.add.text(300, 200, 'Score: ' + this.playerScore, { fontSize: '32px', fill: '#FFF' })
     }
     update() {
+        document.getElementById('description').innerHTML = `<h1>Player Health = ${this.playerHealth}<h1><h1>Player Score = ${this.playerScore}<h1>`
+
+
         //make sure player isnt dead
         if (this.playerHealth === 0) {
+            document.getElementById('description').innerHTML = `<h1>Player Health = 0<h1><h1>Player Score = ${this.playerScore}<h1>`
+
             this.gameOver(this.playerScore);
         }
         //movement controls
         if (cursors.left.isDown || this.cursors.left.isDown) {
-            this.my.sprite.player.x -= this.playerSpeed;
-            this.my.sprite.player.scaleX = -1;
-            this.my.sprite.player.body.offset.x = this.my.sprite.player.width;
-            if (this.my.sprite.player.x < this.my.sprite.player.width) {
-                this.my.sprite.player.x = this.my.sprite.player.width;
+            my.sprite.player.x -= this.playerSpeed;
+            my.sprite.player.scaleX = -1;
+            my.sprite.player.body.offset.x = my.sprite.player.width;
+            if (my.sprite.player.x < my.sprite.player.width) {
+                my.sprite.player.x = my.sprite.player.width;
             }
         }
         if (cursors.right.isDown || this.cursors.right.isDown) {
-            this.my.sprite.player.x += this.playerSpeed;
-            this.my.sprite.player.scaleX = 1;
-            this.my.sprite.player.body.offset.x = 0;
-            if (this.my.sprite.player.x > this.mapWidth - this.my.sprite.player.width) {
-                this.my.sprite.player.x = this.mapWidth - this.my.sprite.player.width;
+            my.sprite.player.x += this.playerSpeed;
+            my.sprite.player.scaleX = 1;
+            my.sprite.player.body.offset.x = 0;
+            if (my.sprite.player.x > this.mapWidth - my.sprite.player.width) {
+                my.sprite.player.x = this.mapWidth - my.sprite.player.width;
             }
-        }  
+        }
         if (cursors.up.isDown || this.cursors.up.isDown) {
-            this.my.sprite.player.y -= this.playerSpeed;
-            if (this.my.sprite.player.y < this.my.sprite.player.height) {
-                this.my.sprite.player.y = this.my.sprite.player.height;
+            my.sprite.player.y -= this.playerSpeed;
+            if (my.sprite.player.y < my.sprite.player.height) {
+                my.sprite.player.y = my.sprite.player.height;
             }
         }
         if (cursors.down.isDown || this.cursors.down.isDown) {
-            this.my.sprite.player.y += this.playerSpeed;
-            if (this.my.sprite.player.y > this.mapHeight - this.my.sprite.player.height) {
-                this.my.sprite.player.y = this.mapHeight - this.my.sprite.player.height;
+            my.sprite.player.y += this.playerSpeed;
+            if (my.sprite.player.y > this.mapHeight - my.sprite.player.height) {
+                my.sprite.player.y = this.mapHeight - my.sprite.player.height;
             }
         }
         // Update bullets position
@@ -178,7 +181,7 @@ class Wizard extends Phaser.Scene {
         // Makes cyclops move towards player
         this.cyclopsGroup.children.each(cyclops => {
             if (cyclops.active) {
-                let direction = new Phaser.Math.Vector2(this.my.sprite.player.x - cyclops.x, this.my.sprite.player.y - cyclops.y);
+                let direction = new Phaser.Math.Vector2(my.sprite.player.x - cyclops.x, my.sprite.player.y - cyclops.y);
                 direction.normalize();
                 cyclops.setVelocity(direction.x * this.cyclopsSpeed, direction.y * this.cyclopsSpeed);
             }
@@ -215,28 +218,26 @@ class Wizard extends Phaser.Scene {
         bullet.setVisible(false);
         bullet.destroy();
 
-        cyclops.hitsLeft-= this.damage;
+        cyclops.hitsLeft -= this.damage;
         if (cyclops.hitsLeft <= 0) {
             cyclops.setActive(false);
             cyclops.setVisible(false);
             cyclops.destroy();
             this.playerScore += 10; // Increase player score when cyclops is destroyed
-            this.scoreText.setText(`Score: ${this.playerScore}`); // Update score
         }
     }
 
     playerHitCyclops(player, cyclops) {
         if (!this.isInvincible) {
             this.playerHealth -= this.cyclopsDamage;
-            this.healthText.setText(`Health: ${this.playerHealth}`); // Update Health
             if (this.playerHealth <= 0) {
                 this.gameOver(this.playerScore);
             } else {
                 this.isInvincible = true;
-                this.my.sprite.player.setTint(0xffffff); // Change color for invincibility. This does not work so we can just change this to audio later
+                my.sprite.player.setTint(0xffffff); // Change color for invincibility. This does not work so we can just change this to audio later
                 this.time.delayedCall(this.invincibilityDuration, () => {
                     this.isInvincible = false;
-                    this.my.sprite.player.clearTint(); // Reset player color. This wouldn't be needed later
+                    my.sprite.player.clearTint(); // Reset player color. This wouldn't be needed later
                 }, [], this);
             }
         }
