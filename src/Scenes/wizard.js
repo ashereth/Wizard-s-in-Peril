@@ -48,7 +48,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         this.init();
-        document.getElementById('description').innerHTML = `<h1>Player Health = 10<h1><h1>Player Score = 0<h1>`
+        document.getElementById('description').innerHTML = `<h1>Player Health = 10<h1><h1>Player Level = 0<h1>`
 
 
     }
@@ -56,7 +56,10 @@ class Wizard extends Phaser.Scene {
     init() {
         //set initial player values
         this.playerHealth = 10;
-        this.playerScore = 10;
+        this.playerScore = 0;
+        //how may points to level up
+        this.scoreToLevel = 10;
+        this.level = 1;
         //how fast the bullets travel
         this.bulletSpeed = 200;
         //how large the bullets ares
@@ -130,8 +133,12 @@ class Wizard extends Phaser.Scene {
 
     }
     update() {
-        document.getElementById('description').innerHTML = `<h1>Player Health = ${this.playerHealth}<h1><h1>Player Score = ${this.playerScore}<h1>`
+        //update the score and level text
+        document.getElementById('description').innerHTML = `<h1>Health = ${this.playerHealth}<h1><h1>Your Level = ${this.level}<h1><h1>%${parseInt((this.playerScore/this.scoreToLevel)*100)} to level ${this.level+1}<h1>`
 
+        if (this.playerScore>=this.scoreToLevel) {
+            this.levelUp()
+        }
 
         //make sure player isnt dead
         if (this.playerHealth === 0) {
@@ -191,6 +198,13 @@ class Wizard extends Phaser.Scene {
             this.scene.launch('PopupScene', { playerSpeed: this.playerSpeed });
             this.scene.pause();
         }
+    }
+
+    //function called whenever player levels up
+    levelUp(){
+        this.level += 1
+        this.playerScore = 0;
+        this.scoreToLevel*=1.5;
     }
 
     updatePlayerSpeed(newSpeed) {
