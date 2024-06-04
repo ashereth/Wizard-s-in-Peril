@@ -4,12 +4,12 @@ class GameOverScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.score = data.score;
+        this.level = data.level;
     }
 
     create() {
         // Display "Game Over" text
-        this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 100, `Game Over. Score = ${this.score}`, {
+        this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 100, `Game Over. Level reached = ${this.level}`, {
             fontSize: '64px',
             fill: '#FFFFFF'
         }).setOrigin(0.5);

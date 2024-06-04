@@ -6,8 +6,8 @@ class Wizard extends Phaser.Scene {
         this.isInvincible = false;
     }
     //send player to game over scene
-    gameOver(score) {
-        this.scene.start('GameOverScene', { score: score });
+    gameOver(level) {
+        this.scene.start('GameOverScene', { level: level });
 
     }
     //code for emitting a bullet
@@ -159,7 +159,7 @@ class Wizard extends Phaser.Scene {
         if (this.playerHealth === 0) {
             document.getElementById('description').innerHTML = `<h1>Player Health = 0<h1><h1>Player Score = ${this.playerScore}<h1>`
 
-            this.gameOver(this.playerScore);
+            this.gameOver(this.level);
         }
         //movement controls
         if (cursors.left.isDown || this.cursors.left.isDown) {
@@ -270,7 +270,7 @@ class Wizard extends Phaser.Scene {
         if (!this.isInvincible) {
             this.playerHealth -= this.cyclopsDamage;
             if (this.playerHealth <= 0) {
-                this.gameOver(this.playerScore);
+                this.gameOver(this.level);
             } else {
                 this.isInvincible = true;
                 my.sprite.player.setTint(0xffffff); // Change color for invincibility. This does not work so we can just change this to audio later
