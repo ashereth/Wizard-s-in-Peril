@@ -68,6 +68,7 @@ class Wizard extends Phaser.Scene {
         this.cyclopsSpawnRate = 1000;
         this.cyclopsHitsToDestroy = 3;
         this.cyclopsSpeed = 50;
+        this.damage = 1;
     }
     create() {
         let my = this.my;
@@ -200,7 +201,7 @@ class Wizard extends Phaser.Scene {
         bullet.setVisible(false);
         bullet.destroy();
 
-        cyclops.hitsLeft--;
+        cyclops.hitsLeft-= this.damage;
         if (cyclops.hitsLeft <= 0) {
             cyclops.setActive(false);
             cyclops.setVisible(false);
