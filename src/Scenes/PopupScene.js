@@ -24,23 +24,24 @@ class PopupScene extends Phaser.Scene {
     create() {
         if (this.upgrades && this.upgrades.length === 2) {
             // Display the first upgrade option
-            this.popupBg1 = this.add.rectangle(400, 450, 300, 400, 0x000000, 0.8);
-            this.upgradeText1 = this.add.text(400, 400, this.upgrades[0].name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-            this.upgradeButton1 = this.add.sprite(400, 450, 'button').setInteractive();
+            this.popupBg1 = this.add.rectangle(400, 450, 500, 600, 0x000000, 0.8);
+            this.upgradeText1 = this.add.text(420, 450, this.upgrades[0].name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+            this.upgradeButton1 = this.add.sprite(400, 550, 'button').setInteractive();
             this.upgradeButton1.setScale(2);
             this.upgradeButton1.on('pointerdown', () => {
                 this.selectUpgrade(this.upgrades[0]);
             });
-
+        
             // Display the second upgrade option
-            this.popupBg2 = this.add.rectangle(800, 450, 300, 400, 0x000000, 0.8);
-            this.upgradeText2 = this.add.text(800, 400, this.upgrades[1].name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-            this.upgradeButton2 = this.add.sprite(800, 450, 'button').setInteractive();
+            this.popupBg2 = this.add.rectangle(1000, 450, 500, 600, 0x000000, 0.8);
+            this.upgradeText2 = this.add.text(1020, 450, this.upgrades[1].name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+            this.upgradeButton2 = this.add.sprite(1000, 550, 'button').setInteractive();
             this.upgradeButton2.setScale(2);
             this.upgradeButton2.on('pointerdown', () => {
                 this.selectUpgrade(this.upgrades[1]);
             });
-        } else {
+        }
+         else {
             console.error("Upgrades data is invalid:", this.upgrades);
             this.closePopup();
         }

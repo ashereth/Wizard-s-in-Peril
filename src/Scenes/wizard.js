@@ -7,24 +7,29 @@ class Wizard extends Phaser.Scene {
 
         // define the possible upgrades
         this.upgrades = [
-            { name: 'Damage Potion (increase projectile damage)', apply: () => this.damage += 1 },
-            { name: 'Speed Potion (increases movement speed)', apply: () => this.playerSpeed += 0.5 },
-            { name: 'Haste Potion (increases bullet speed)', apply: () => this.bulletSpeed += 50 },
-            { name: 'Projectile Magnification Potion (increase size of projectiles)', apply: () => this.bulletScale += 0.4 },
-            { name: 'Tome of Burst Shot (increases number of projectiles shot per click)', apply: () => this.numBullets += 1 },
+            { name: 'Damage Potion', apply: () => this.damage += 1 },
+            { name: 'Speed Potion', apply: () => this.playerSpeed += 0.5 },
+            { name: 'Hasty Projectiles Potion', apply: () => this.bulletSpeed += 50 },
+            { name: 'Projectile Magnification Potion', apply: () => this.bulletScale += 0.4 },
+            { name: 'Tome of Burst Shot', apply: () => this.numBullets += 1 },
             {
-                name: 'Health Potion (heals you for 2 health)',
+                name: 'Health Potion',
                 apply: () => {//player health should not go over 10
-                    if (this.playerHealth<=8){
+                    if (this.playerHealth <= 8) {
                         this.playerHealth += 2
-                    }else{
+                    } else {
                         this.playerHealth = 10
                     }
-                         
-                    },
+
+                },
             },
-                
-            { name: 'Tome of Mana Fortification (increases number of projectiles that can be in air at once)', apply: () => this.maxBullets += 20 }
+
+            {
+                name: 'Tome of Mana Fortification', apply: () => {
+                    this.maxBullets += 10//increase max bullets that can be spawned
+                    this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
+                }
+            }
         ];
     }
     //send player to game over scene
@@ -73,7 +78,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         this.load.image("collectable", 'Tiles/laserBlue08.png')
         this.init();
-        document.getElementById('description').innerHTML = `<h1>Player Health = 10<h1><h1>Player Level = 0<h1>`
+        this.setPlayerInfoText();
 
 
     }
@@ -107,6 +112,12 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.cyclopsDamage = 1;
         this.invincibilityDuration = 300;
+
+        // Create a group for bullets
+        this.bullets = this.physics.add.group({
+            defaultKey: 'bullet',
+            maxSize: this.maxBullets,
+        });
     }
     create() {
 
@@ -134,11 +145,6 @@ class Wizard extends Phaser.Scene {
             right: Phaser.Input.Keyboard.KeyCodes.D
         });
 
-        // Create a group for bullets
-        this.bullets = this.physics.add.group({
-            defaultKey: 'bullet',
-            maxSize: this.maxBullets,
-        });
         // Create a group for cyclops enemies
         this.cyclopsGroup = this.physics.add.group();
         //create a group for collectable stuff to be dropped when an enemy dies
@@ -177,8 +183,7 @@ class Wizard extends Phaser.Scene {
     }
     update() {
         //update the score and level text
-        document.getElementById('description').innerHTML = `<h1>Health = ${this.playerHealth}<h1><h1>Your Level = ${this.level}<h1><h1>%${parseInt((this.playerScore / this.scoreToLevel) * 100)} to level ${this.level + 1}<h1>`
-
+        this.setPlayerInfoText()
         if (this.playerScore >= this.scoreToLevel) {
             this.levelUp()
         }
@@ -238,11 +243,20 @@ class Wizard extends Phaser.Scene {
         }, this);
     }
 
+    setPlayerInfoText() {
+        document.getElementById('description').innerHTML = `
+            <h1>Health = ${this.playerHealth}<h1>
+            <h1>Your Level = ${this.level}<h1>
+            <h1>%${parseInt((this.playerScore / this.scoreToLevel) * 100)} to level ${this.level + 1}<h1>
+            <h1>Mana = ${this.maxBullets - this.bullets.getLength()}/${this.maxBullets}</h1>`
+
+    }
+
     //function called whenever player levels up
     levelUp() {
         this.level += 1;
         this.playerScore = 0;
-        this.scoreToLevel *= 1.5;
+        this.scoreToLevel *= 1.25;
 
         // Ensure we have enough upgrades to choose from
         if (this.upgrades.length < 2) {
