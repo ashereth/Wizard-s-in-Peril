@@ -16,6 +16,8 @@ class Wizard extends Phaser.Scene {
     }
     //send player to game over scene
     gameOver(level) {
+        //reset text on side of game
+        document.getElementById('description').innerHTML = `<p></p>`
         this.scene.start('GameOverScene', { level: level });
 
     }
