@@ -113,16 +113,16 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.enemyDamage = 1;
         this.invincibilityDuration = 300;
+        this.darkWizardHitsToDestroy = 20;
+        this.wizardSpeed = 25;
+        this.wizardSpawnRate = 5000;
+
 
         // Create a group for bullets
         this.bullets = this.physics.add.group({
             defaultKey: 'bullet',
             maxSize: this.maxBullets,
         });
-        this.darkWizardHitsToDestroy = 20;
-        this.wizardSpeed = 25;
-        this.wizardSpawnRate = 5000;
-
     }
     create() {
 
@@ -149,6 +149,7 @@ class Wizard extends Phaser.Scene {
             left: Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D
         });
+
 
         // Create a group for cyclops enemies
         this.cyclopsGroup = this.physics.add.group();
@@ -319,7 +320,7 @@ class Wizard extends Phaser.Scene {
         this.scene.resume();
     }
 
-    spawnDarkWizard(){
+    spawnDarkWizard() {
         let positions = [
             { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
             { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
@@ -328,7 +329,7 @@ class Wizard extends Phaser.Scene {
         ];
         let pos = Phaser.Utils.Array.GetRandom(positions);
         let wizard = this.darkWizardGroup.create(pos.x, pos.y, 'dark wizard');
-        wizard.setScale(this.cyclopsSCALE*1.5);
+        wizard.setScale(this.cyclopsSCALE * 1.5);
         wizard.setActive(true)
         wizard.setVisible(true)
         wizard.body.setAllowGravity(false);
