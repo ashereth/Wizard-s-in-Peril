@@ -118,7 +118,7 @@ class Wizard extends Phaser.Scene {
         this.spiderSpeed = 100;
         this.spiderHitsToDestory = 1;
         this.spiderSpawnRate = 2000;
-        this.spiderSCALE = .25;
+        this.spiderSCALE = .50;
 
 
         // Create a group for bullets
@@ -190,7 +190,7 @@ class Wizard extends Phaser.Scene {
         })
         this.time.addEvent({
             delay: this.spiderSpawnRate,
-            callback: this.spawnDarkWizard,
+            callback: this.spawnSpider,
             callbackScope: this,
             loop: true
         })
@@ -300,7 +300,7 @@ class Wizard extends Phaser.Scene {
         }, this);
 
         //make spider move toward player
-        this.spiderGroup.children.each(wizard => {
+        this.spiderGroup.children.each(spider=> {
             if (spider.active) {
                 let direction = new Phaser.Math.Vector2(my.sprite.player.x - spider.x, my.sprite.player.y - spider.y);
                 direction.normalize();
@@ -403,7 +403,7 @@ class Wizard extends Phaser.Scene {
         spider.setActive(true);
         spider.setVisible(true);
         spider.body.setAllowGravity(false);
-        spider.hitsLeft = this.spiderHitsToDestroy;
+        spider.hitsLeft = this.spiderHitsToDestory;
     }
 
     enemyDeath(enemy) {
