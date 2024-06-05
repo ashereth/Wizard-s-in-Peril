@@ -7,11 +7,24 @@ class Wizard extends Phaser.Scene {
 
         // define the possible upgrades
         this.upgrades = [
-            { name: 'Increase Damage', apply: () => this.damage += 1 },
-            { name: 'Increase Speed', apply: () => this.playerSpeed += 0.5 },
-            { name: 'Faster Shooting', apply: () => this.bulletSpeed += 50 },
-            { name: 'Larger Bullets', apply: () => this.bulletScale += 0.4 },
-            { name: 'Burst Shot', apply: () => this.numBullets += 3 }
+            { name: 'Damage Potion (increase projectile damage)', apply: () => this.damage += 1 },
+            { name: 'Speed Potion (increases movement speed)', apply: () => this.playerSpeed += 0.5 },
+            { name: 'Haste Potion (increases bullet speed)', apply: () => this.bulletSpeed += 50 },
+            { name: 'Projectile Magnification Potion (increase size of projectiles)', apply: () => this.bulletScale += 0.4 },
+            { name: 'Tome of Burst Shot (increases number of projectiles shot per click)', apply: () => this.numBullets += 1 },
+            {
+                name: 'Health Potion (heals you for 2 health)',
+                apply: () => {//player health should not go over 10
+                    if (this.playerHealth<=8){
+                        this.playerHealth += 2
+                    }else{
+                        this.playerHealth = 10
+                    }
+                         
+                    },
+            },
+                
+            { name: 'Tome of Mana Fortification (increases number of projectiles that can be in air at once)', apply: () => this.maxBullets += 20 }
         ];
     }
     //send player to game over scene
@@ -78,6 +91,10 @@ class Wizard extends Phaser.Scene {
         this.bulletScale = .2;
         //how many bullets get shot each click
         this.numBullets = 1;
+        //maximum number of bullets that can be on screen at a time
+        this.maxBullets = 20;
+        //amount of score gained per collectable pickup
+        this.scoreGainPerCollectable = 10;
 
         this.mapWidth = 16 * 30;
         this.mapHeight = 16 * 30;
@@ -120,7 +137,7 @@ class Wizard extends Phaser.Scene {
         // Create a group for bullets
         this.bullets = this.physics.add.group({
             defaultKey: 'bullet',
-            maxSize: 50,
+            maxSize: this.maxBullets,
         });
         // Create a group for cyclops enemies
         this.cyclopsGroup = this.physics.add.group();
@@ -148,11 +165,11 @@ class Wizard extends Phaser.Scene {
         //player can pick up collectables
         this.physics.add.overlap(my.sprite.player, this.collectableGroup, (player, collectable) => {
             collectable.destroy();
-            this.playerScore += 10;
+            this.playerScore += this.scoreGainPerCollectable;
         });
 
         // debug key listener (assigned to F key)
-        this.input.keyboard.on('keydown-F', function() {
+        this.input.keyboard.on('keydown-F', function () {
             this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
             this.physics.world.debugGraphic.clear()
         }, this)
@@ -160,9 +177,9 @@ class Wizard extends Phaser.Scene {
     }
     update() {
         //update the score and level text
-        document.getElementById('description').innerHTML = `<h1>Health = ${this.playerHealth}<h1><h1>Your Level = ${this.level}<h1><h1>%${parseInt((this.playerScore/this.scoreToLevel)*100)} to level ${this.level+1}<h1>`
+        document.getElementById('description').innerHTML = `<h1>Health = ${this.playerHealth}<h1><h1>Your Level = ${this.level}<h1><h1>%${parseInt((this.playerScore / this.scoreToLevel) * 100)} to level ${this.level + 1}<h1>`
 
-        if (this.playerScore>=this.scoreToLevel) {
+        if (this.playerScore >= this.scoreToLevel) {
             this.levelUp()
         }
 
@@ -222,17 +239,17 @@ class Wizard extends Phaser.Scene {
     }
 
     //function called whenever player levels up
-    levelUp(){
+    levelUp() {
         this.level += 1;
         this.playerScore = 0;
         this.scoreToLevel *= 1.5;
-    
+
         // Ensure we have enough upgrades to choose from
         if (this.upgrades.length < 2) {
             console.error("Not enough upgrades available.");
             return;
         }
-    
+
         // Select two distinct random upgrades
         let selectedUpgrades = [];
         while (selectedUpgrades.length < 2) {
@@ -241,8 +258,9 @@ class Wizard extends Phaser.Scene {
                 selectedUpgrades.push(randomUpgrade);
             }
         }
-    
+
         // Show upgrades to the player
+        console.log(selectedUpgrades)
         this.displayUpgradeChoices(selectedUpgrades);
     }
 
@@ -274,7 +292,7 @@ class Wizard extends Phaser.Scene {
         cyclops.hitsLeft = this.cyclopsHitsToDestroy;
     }
 
-    enemyDeath(enemy){
+    enemyDeath(enemy) {
         let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
         collectable.setActive(true);
         collectable.setVisible(true);
@@ -294,7 +312,6 @@ class Wizard extends Phaser.Scene {
             cyclops.setActive(false);
             cyclops.setVisible(false);
             cyclops.destroy();
-            this.playerScore += 10; // Increase player score when cyclops is destroyed
         }
     }
 
