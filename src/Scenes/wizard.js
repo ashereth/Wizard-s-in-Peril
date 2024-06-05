@@ -20,10 +20,8 @@ class Wizard extends Phaser.Scene {
                     } else {
                         this.playerHealth = 10
                     }
-
                 },
             },
-
             {
                 name: 'Tome of Mana Fortification', apply: () => {
                     this.maxBullets += 10//increase max bullets that can be spawned
@@ -77,6 +75,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         this.load.image("dark wizard", "Tiles/tile_0111.png");//load dark wizard pricture
+        this.load.image("spider", "Tiles/tile_0122.png"); //load spider
         this.load.image("collectable", 'Tiles/laserBlue08.png')
         this.init();
         this.setPlayerInfoText();
@@ -107,7 +106,7 @@ class Wizard extends Phaser.Scene {
         this.playerSpeed = 1.5;
         this.SCALE = .75;
         this.cyclopsSCALE = 1.25;
-        this.cyclopsSpawnRate = 1000;
+        this.cyclopsSpawnRate = 2000;
         this.cyclopsHitsToDestroy = 3;
         this.cyclopsSpeed = 50;
         this.damage = 1;
@@ -116,10 +115,19 @@ class Wizard extends Phaser.Scene {
         this.darkWizardHitsToDestroy = 20;
         this.wizardSpeed = 25;
         this.wizardSpawnRate = 5000;
+        this.spiderSpeed = 100;
+        this.spiderHitsToDestory = 1;
+        this.spiderSpawnRate = 2000;
+        this.spiderSCALE = .25;
 
 
         // Create a group for bullets
         this.bullets = this.physics.add.group({
+            defaultKey: 'bullet',
+            maxSize: this.maxBullets,
+        });
+
+        this.darkWizardBullets = this.physics.add.group({
             defaultKey: 'bullet',
             maxSize: this.maxBullets,
         });
@@ -155,6 +163,10 @@ class Wizard extends Phaser.Scene {
         this.cyclopsGroup = this.physics.add.group();
         //new group for wizard enemies
         this.darkWizardGroup = this.physics.add.group();
+
+        //new group for spider enemies
+        this.spiderGroup = this.physics.add.group();
+
         //create a group for collectable stuff to be dropped when an enemy dies
         this.collectableGroup = this.physics.add.group();
 
@@ -176,17 +188,29 @@ class Wizard extends Phaser.Scene {
             callbackScope: this,
             loop: true
         })
+        this.time.addEvent({
+            delay: this.spiderSpawnRate,
+            callback: this.spawnDarkWizard,
+            callbackScope: this,
+            loop: true
+        })
+
 
         // Add collision detection between bullets and cyclops
         this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitEnemy, null, this);
         //add collision between bullets and wizards
         this.physics.add.overlap(this.bullets, this.darkWizardGroup, this.hitEnemy, null, this);
+        //add collision between bullets and spider
+        this.physics.add.overlap(this.bullets, this.spiderGroup, this.hitEnemy, null, this);
 
         // Add collision detection between cyclops and player
         this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitEnemy, null, this);
 
         //add collision between wizards and player
         this.physics.add.overlap(my.sprite.player, this.darkWizardGroup, this.playerHitEnemy, null, this);
+
+        //add collision between spider and player
+        this.physics.add.overlap(my.sprite.player, this.spiderGroup, this.playerHitEnemy, null, this);
 
 
         //player can pick up collectables
@@ -254,6 +278,8 @@ class Wizard extends Phaser.Scene {
             }
         }, this);
 
+        
+
         // Makes cyclops move towards player
         this.cyclopsGroup.children.each(cyclops => {
             if (cyclops.active) {
@@ -269,6 +295,16 @@ class Wizard extends Phaser.Scene {
                 let direction = new Phaser.Math.Vector2(my.sprite.player.x - wizard.x, my.sprite.player.y - wizard.y);
                 direction.normalize();
                 wizard.setVelocity(direction.x * this.wizardSpeed, direction.y * this.wizardSpeed);
+                //make the wizards shoot in all four directions
+            }
+        }, this);
+
+        //make spider move toward player
+        this.spiderGroup.children.each(wizard => {
+            if (spider.active) {
+                let direction = new Phaser.Math.Vector2(my.sprite.player.x - spider.x, my.sprite.player.y - spider.y);
+                direction.normalize();
+                spider.setVelocity(direction.x * this.spiderSpeed, direction.y * this.spiderSpeed);
             }
         }, this);
     }
@@ -287,6 +323,8 @@ class Wizard extends Phaser.Scene {
         this.level += 1;
         this.playerScore = 0;
         this.scoreToLevel *= 1.25;
+        this.spiderSpawnRate *= 0.75;
+        this.cyclopsSpawnRate *= 0.75;
 
         // Ensure we have enough upgrades to choose from
         if (this.upgrades.length < 2) {
@@ -352,12 +390,33 @@ class Wizard extends Phaser.Scene {
         cyclops.hitsLeft = this.cyclopsHitsToDestroy;
     }
 
+    spawnSpider() {
+        let positions = [
+            { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
+            { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
+            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(-50, 0) },
+            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(this.mapHeight, this.mapHeight + 50) }
+        ];
+        let pos = Phaser.Utils.Array.GetRandom(positions);
+        let spider = this.spiderGroup.create(pos.x, pos.y, 'spider');
+        spider.setScale(this.spiderSCALE);
+        spider.setActive(true);
+        spider.setVisible(true);
+        spider.body.setAllowGravity(false);
+        spider.hitsLeft = this.spiderHitsToDestroy;
+    }
+
     enemyDeath(enemy) {
         let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
         collectable.setActive(true);
         collectable.setVisible(true);
         collectable.body.setAllowGravity(false);
         collectable.setScale(.2);
+    }
+
+    darkWizardShoot(wizard, velocityX, velocityY) {
+        var projectile = this.darkWizardBullets.create(wizard.x, wizard.y, 'bullet')
+        this.physics.moveTo(projectile, velocityX, velocityY, this.bulletSpeed);
     }
 
     hitEnemy(bullet, enemy) {
@@ -367,7 +426,7 @@ class Wizard extends Phaser.Scene {
 
         enemy.hitsLeft -= this.damage;
         if (enemy.hitsLeft <= 0) {
-            //cyclops spaws consumable when dead
+            // Enemies spaws consumable when dead
             this.enemyDeath(enemy);
             enemy.setActive(false);
             enemy.setVisible(false);
