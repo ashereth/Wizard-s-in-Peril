@@ -3,50 +3,51 @@ class PopupScene extends Phaser.Scene {
         super("PopupScene");
     }
 
-    init(data) {
-        this.playerSpeed = data.playerSpeed;
-    }
-
     preload() {
         this.load.setPath("./assets/");
-        this.load.image("tilemap_tiles", "Tilemap/tilemap_packed.png");                         // Packed tilemap
-        this.load.image("button", "Tiles/tile_0061.png");
-        this.load.image("green", "Tiles/tile_0114.png");
+        //load background
+        this.load.image("tilemap_tiles", "Tilemap/tilemap_packed.png");// Packed tilemap
+        this.load.image("button", "Tiles/tile_0131.png");
+    }
+    
+    init(data) {
+        if (Array.isArray(data.upgrades) && data.upgrades.length === 2) {
+            this.upgrades = data.upgrades;
+        } else {
+            console.error("Upgrades data is invalid or not of length 2:", data.upgrades);
+            this.closePopup();
+        }
+        console.log('PopupScene Init Data:', data);
+        console.log('Upgrades:', this.upgrades);
     }
 
     create() {
-        // upgrade for speed
-        this.popupBg = this.add.rectangle(900, 450, 300, 400, 0x000000, 0.8);
-        this.speedText = this.add.text(900, 400, 'Upgrade Your Speed!', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        if (this.upgrades && this.upgrades.length === 2) {
+            // Display the first upgrade option
+            this.popupBg1 = this.add.rectangle(400, 450, 300, 400, 0x000000, 0.8);
+            this.upgradeText1 = this.add.text(400, 400, this.upgrades[0].name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+            this.upgradeButton1 = this.add.sprite(400, 450, 'button').setInteractive();
+            this.upgradeButton1.setScale(2);
+            this.upgradeButton1.on('pointerdown', () => {
+                this.selectUpgrade(this.upgrades[0]);
+            });
 
-        this.speedButton = this.add.sprite(900, 450, 'button').setInteractive();
-        this.speedButton.setScale(2);
-
-        this.speedButton.on('pointerdown', () => {
-            this.upgradeSpeed();
-        });
-
-        // downgrade for speed
-        this.popupGreen = this.add.rectangle(500, 450, 300, 400, 0x000000, 0.8);
-        this.slowText = this.add.text(500, 400, 'Downgrade Your Speed!', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-
-        this.slowButton = this.add.sprite(500, 450, 'green').setInteractive();
-        this.slowButton.setScale(3);
-
-        this.slowButton.on('pointerdown', () => {
-            this.downgradeSpeed();
-        });
+            // Display the second upgrade option
+            this.popupBg2 = this.add.rectangle(800, 450, 300, 400, 0x000000, 0.8);
+            this.upgradeText2 = this.add.text(800, 400, this.upgrades[1].name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+            this.upgradeButton2 = this.add.sprite(800, 450, 'button').setInteractive();
+            this.upgradeButton2.setScale(2);
+            this.upgradeButton2.on('pointerdown', () => {
+                this.selectUpgrade(this.upgrades[1]);
+            });
+        } else {
+            console.error("Upgrades data is invalid:", this.upgrades);
+            this.closePopup();
+        }
     }
 
-    upgradeSpeed() {
-        this.playerSpeed += 0.5;
-        this.scene.get('wizardScene').updatePlayerSpeed(this.playerSpeed);
-        this.closePopup();
-    }
-
-    downgradeSpeed() {
-        this.playerSpeed -= 0.5;
-        this.scene.get('wizardScene').updatePlayerSpeed(this.playerSpeed);
+    selectUpgrade(upgrade) {
+        this.scene.get('wizardScene').applyUpgrade(upgrade);
         this.closePopup();
     }
 

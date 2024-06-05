@@ -4,6 +4,15 @@ class Wizard extends Phaser.Scene {
         this.gameOver = this.gameOver.bind(this);
         this.cyclopsGroup = null;
         this.isInvincible = false;
+
+        // define the possible upgrades
+        this.upgrades = [
+            { name: 'Increase Damage', apply: () => this.damage += 1 },
+            { name: 'Increase Speed', apply: () => this.playerSpeed += 0.5 },
+            { name: 'Faster Shooting', apply: () => this.bulletSpeed += 50 },
+            { name: 'Larger Bullets', apply: () => this.bulletScale += 0.4 },
+            { name: 'Burst Shot', apply: () => this.numBullets += 3 }
+        ];
     }
     //send player to game over scene
     gameOver(level) {
@@ -208,22 +217,43 @@ class Wizard extends Phaser.Scene {
                 cyclops.setVelocity(direction.x * this.cyclopsSpeed, direction.y * this.cyclopsSpeed);
             }
         }, this);
-
-        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-            this.scene.launch('PopupScene', { playerSpeed: this.playerSpeed });
-            this.scene.pause();
-        }
     }
 
     //function called whenever player levels up
     levelUp(){
-        this.level += 1
+        this.level += 1;
         this.playerScore = 0;
-        this.scoreToLevel*=1.5;
+        this.scoreToLevel *= 1.5;
+    
+        // Ensure we have enough upgrades to choose from
+        if (this.upgrades.length < 2) {
+            console.error("Not enough upgrades available.");
+            return;
+        }
+    
+        // Select two distinct random upgrades
+        let selectedUpgrades = [];
+        while (selectedUpgrades.length < 2) {
+            let randomUpgrade = Phaser.Utils.Array.GetRandom(this.upgrades);
+            if (!selectedUpgrades.includes(randomUpgrade)) {
+                selectedUpgrades.push(randomUpgrade);
+            }
+        }
+    
+        // Show upgrades to the player
+        this.displayUpgradeChoices(selectedUpgrades);
     }
 
-    updatePlayerSpeed(newSpeed) {
-        this.playerSpeed = newSpeed;
+    displayUpgradeChoices(upgrades) {
+        // Pause game and go to popup upgrades
+        console.log('Selected Upgrades:', upgrades); // Debugging statement
+        this.scene.pause();
+        this.scene.launch('PopupScene', { upgrades: upgrades, wizardScene: this });
+    }
+
+    applyUpgrade(upgrade) {
+        upgrade.apply();
+        this.scene.resume();
     }
 
     spawnCyclops() {
