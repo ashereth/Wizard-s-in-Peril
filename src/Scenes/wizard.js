@@ -71,6 +71,7 @@ class Wizard extends Phaser.Scene {
         this.load.tilemapTiledJSON("Background-Map", "Background-Map.tmj");   // Tilemap in JSON
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
+        this.load.image("dark wizard", "Tiles/tile_0111.png");//load dark wizard pricture
         this.load.image("collectable", 'Tiles/laserBlue08.png')
         this.init();
         document.getElementById('description').innerHTML = `<h1>Player Health = 10<h1><h1>Player Level = 0<h1>`
@@ -105,8 +106,12 @@ class Wizard extends Phaser.Scene {
         this.cyclopsHitsToDestroy = 3;
         this.cyclopsSpeed = 50;
         this.damage = 1;
-        this.cyclopsDamage = 1;
+        this.enemyDamage = 1;
         this.invincibilityDuration = 300;
+        this.darkWizardHitsToDestroy = 20;
+        this.wizardSpeed = 25;
+        this.wizardSpawnRate = 5000;
+
     }
     create() {
 
@@ -141,6 +146,8 @@ class Wizard extends Phaser.Scene {
         });
         // Create a group for cyclops enemies
         this.cyclopsGroup = this.physics.add.group();
+        //new group for wizard enemies
+        this.darkWizardGroup = this.physics.add.group();
         //create a group for collectable stuff to be dropped when an enemy dies
         this.collectableGroup = this.physics.add.group();
 
@@ -155,12 +162,25 @@ class Wizard extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
+        //spawn enemy wizards
+        this.time.addEvent({
+            delay: this.wizardSpawnRate,
+            callback: this.spawnDarkWizard,
+            callbackScope: this,
+            loop: true
+        })
 
         // Add collision detection between bullets and cyclops
-        this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitCyclops, null, this);
+        this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitEnemy, null, this);
+        //add collision between bullets and wizards
+        this.physics.add.overlap(this.bullets, this.darkWizardGroup, this.hitEnemy, null, this);
 
         // Add collision detection between cyclops and player
-        this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitCyclops, null, this);
+        this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitEnemy, null, this);
+
+        //add collision between wizards and player
+        this.physics.add.overlap(my.sprite.player, this.darkWizardGroup, this.playerHitEnemy, null, this);
+
 
         //player can pick up collectables
         this.physics.add.overlap(my.sprite.player, this.collectableGroup, (player, collectable) => {
@@ -236,6 +256,15 @@ class Wizard extends Phaser.Scene {
                 cyclops.setVelocity(direction.x * this.cyclopsSpeed, direction.y * this.cyclopsSpeed);
             }
         }, this);
+
+        //make wizards move toward player
+        this.darkWizardGroup.children.each(wizard => {
+            if (wizard.active) {
+                let direction = new Phaser.Math.Vector2(my.sprite.player.x - wizard.x, my.sprite.player.y - wizard.y);
+                direction.normalize();
+                wizard.setVelocity(direction.x * this.wizardSpeed, direction.y * this.wizardSpeed);
+            }
+        }, this);
     }
 
     //function called whenever player levels up
@@ -276,6 +305,22 @@ class Wizard extends Phaser.Scene {
         this.scene.resume();
     }
 
+    spawnDarkWizard(){
+        let positions = [
+            { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
+            { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
+            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(-50, 0) },
+            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(this.mapHeight, this.mapHeight + 50) }
+        ];
+        let pos = Phaser.Utils.Array.GetRandom(positions);
+        let wizard = this.darkWizardGroup.create(pos.x, pos.y, 'dark wizard');
+        wizard.setScale(this.cyclopsSCALE*1.5);
+        wizard.setActive(true)
+        wizard.setVisible(true)
+        wizard.body.setAllowGravity(false);
+        wizard.hitsLeft = this.darkWizardHitsToDestroy;
+    }
+
     spawnCyclops() {
         let positions = [
             { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
@@ -300,24 +345,24 @@ class Wizard extends Phaser.Scene {
         collectable.setScale(.2);
     }
 
-    hitCyclops(bullet, cyclops) {
+    hitEnemy(bullet, enemy) {
         bullet.setActive(false);
         bullet.setVisible(false);
         bullet.destroy();
 
-        cyclops.hitsLeft -= this.damage;
-        if (cyclops.hitsLeft <= 0) {
+        enemy.hitsLeft -= this.damage;
+        if (enemy.hitsLeft <= 0) {
             //cyclops spaws consumable when dead
-            this.enemyDeath(cyclops);
-            cyclops.setActive(false);
-            cyclops.setVisible(false);
-            cyclops.destroy();
+            this.enemyDeath(enemy);
+            enemy.setActive(false);
+            enemy.setVisible(false);
+            enemy.destroy();
         }
     }
 
-    playerHitCyclops(player, cyclops) {
+    playerHitEnemy() {
         if (!this.isInvincible) {
-            this.playerHealth -= this.cyclopsDamage;
+            this.playerHealth -= this.enemyDamage;
             if (this.playerHealth <= 0) {
                 this.gameOver(this.level);
             } else {
@@ -330,4 +375,6 @@ class Wizard extends Phaser.Scene {
             }
         }
     }
+
+
 }
