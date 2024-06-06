@@ -13,18 +13,15 @@ class Wizard extends Phaser.Scene {
             { name: 'Hasty Projectiles Potion', description: "+50 Projectile Speed", apply: () => this.bulletSpeed += 50, tile: "hasty_tile" },
             { name: 'Projectile Magnification Potion', description: "+0.4 Projectile Size", apply: () => this.bulletScale += 0.4, tile: "project_tile" },
             { name: 'Tome of Burst Shot', description: "+1 Projectile Per Shot", apply: () => this.numBullets += 1, tile: "burst_tile" },
-            { name: 'Elixir of Health Restoration', description: "Refill to Full Health", apply: () => this.playerHealth = this.maxHealth, tile: "health_potion_tile"},
+            //{ name: 'Elixir of Health Restoration', description: "Refill to Full Health", apply: () => this.playerHealth = this.maxHealth, tile: "health_potion_tile"},
             {
                 name: 'Tome of Mana Fortification', description: "+3 Max Projectiles", apply: () => {
                     this.maxBullets += 3//increase max bullets that can be spawned
                     this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", description: "+2 Health & +2 Max Health", apply: () => {
-                this.maxHealth += 2,
-                this.playerHealth+=2
-            }, tile: "health_refill_tile"},
-            {name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed+=10, tile: "magnet"}
+            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile"},
+            { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet"}
         ];
     }
     //send player to game over scene
@@ -112,7 +109,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("hasty_tile", "Tiles/tile_0130.png");
         this.load.image("project_tile", "Tiles/tile_0118.png");
         this.load.image("burst_tile", "Tiles/tile_0062.png");
-        this.load.image("health_potion_tile", "Tiles/tile_0114.png");
+        this.load.image("healthCollectable", "Tiles/tile_0114.png");
         this.load.image("mana_tile", "Tiles/tile_0116.png");
         this.load.image("health_refill_tile", "Tiles/tile_0020.png");
         this.load.image("collectable", 'Tiles/laserBlue08.png');
@@ -160,7 +157,7 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.enemyDamage = 1;
 
-        this.invincibilityDuration = 300;
+        this.invincibilityDuration = 400;
 
         this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
@@ -199,7 +196,7 @@ class Wizard extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, this.mapWidth, this.mapHeight);
         this.cameras.main.setBounds(0, 0, this.mapWidth, this.mapHeight);
         this.cameras.main.startFollow(my.sprite.player, true, .1, .1);
-        this.cameras.main.setZoom(4.0);
+        this.cameras.main.setZoom(3.5);
 
         // set up Phaser-provided cursor key input
         cursors = this.input.keyboard.createCursorKeys();
@@ -222,9 +219,11 @@ class Wizard extends Phaser.Scene {
         //create a group for collectable stuff to be dropped when an enemy dies
         this.collectableGroup = this.physics.add.group();
 
+        // makes group for health pickups
+        this.healthGroup = this.physics.add.group();
+
         // Handle mouse click to shoot
         this.input.on('pointerdown', this.shootBullet, this);
-        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // Spawn an enemy cyclops 
         this.cyclopsSpawner = this.time.addEvent({
@@ -273,6 +272,16 @@ class Wizard extends Phaser.Scene {
             this.sound.play('collect', {
                 volume: .1
             });
+        });
+
+        this.physics.add.overlap(my.sprite.player, this.healthGroup, (player, healthCollectable) => {
+            healthCollectable.destroy();
+            if (this.playerHealth < this.maxHealth) {
+                this.playerHealth += 1;
+                this.sound.play('collect', {
+                    volume: .1
+                });
+            }
         });
 
         // debug key listener (assigned to F key)
@@ -394,6 +403,16 @@ class Wizard extends Phaser.Scene {
                 collectable.setVelocity(direction.x * this.collectableSpeed, direction.y * this.collectableSpeed);
             }
         }, this);
+
+        // this makes it so the magnet upgrade works on the health pickups
+        // comment this out to make it stop working with the magnet upgrade
+        this.healthGroup.children.each(healthCollectable => {
+            if (healthCollectable.active) {
+                let direction = new Phaser.Math.Vector2(my.sprite.player.x - healthCollectable.x, my.sprite.player.y - healthCollectable.y);
+                direction.normalize();
+                healthCollectable.setVelocity(direction.x * this.collectableSpeed, direction.y * this.collectableSpeed);
+            }
+        }, this);
     }
 
     setPlayerInfoText() {
@@ -501,11 +520,35 @@ class Wizard extends Phaser.Scene {
     }
 
     enemyDeath(enemy) {
-        let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
-        collectable.setActive(true);
-        collectable.setVisible(true);
-        collectable.body.setAllowGravity(false);
-        collectable.setScale(.2);
+        // determine drop type based on random chance
+        let dropType = Phaser.Math.Between(0, 100);
+
+        // 80% droprate for upgrade collectable, 20% droprate for health
+        if (dropType < 80) {
+            let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
+            collectable.setActive(true);
+            collectable.setVisible(true);
+            collectable.body.setAllowGravity(false);
+            collectable.setScale(.2);
+        }
+        else {
+            let healthCollectable = this.healthGroup.create(enemy.x, enemy.y, 'healthCollectable');
+            healthCollectable.setActive(true);
+            healthCollectable.setVisible(true);
+            healthCollectable.body.setAllowGravity(false);
+            healthCollectable.setScale(0.75);
+
+            // Tween to fade out the health collectable over 10 seconds
+            this.tweens.add({
+                targets: healthCollectable,
+                alpha: 0,
+                duration: 7000,
+                onComplete: () => {
+                    healthCollectable.destroy();
+                }
+            });
+        }
+        
     }
 
     hitEnemy(bullet, enemy) {
