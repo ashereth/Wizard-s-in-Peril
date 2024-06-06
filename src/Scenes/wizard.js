@@ -258,7 +258,7 @@ class Wizard extends Phaser.Scene {
             this.playerScore += this.scoreGainPerCollectable;
             this.sound.play('collect', {
                 volume: .1
-             });
+            });
         });
 
         // debug key listener (assigned to F key)
@@ -376,7 +376,14 @@ class Wizard extends Phaser.Scene {
         this.cyclopsSpawnRate *= 0.75;
         this.sound.play('levelUp', {
             volume: .3
-         });
+        });
+        //every 5 levels spawn that many dark wizards
+        if (this.level % 5 === 0) {
+            for (let i = 0; i < Math.floor(this.level / 5); i++) {
+                console.log(Math.floor(this.level / 5))
+                this.spawnDarkWizard()
+            }
+        }
 
         // Ensure we have enough upgrades to choose from
         if (this.upgrades.length < 2) {
@@ -482,16 +489,16 @@ class Wizard extends Phaser.Scene {
     playerHitEnemy() {
         if (!this.isInvincible) {
             this.playerHealth -= this.enemyDamage;
-            
+
             if (this.playerHealth <= 0) {
                 this.sound.play('die', {
                     volume: .3
-                 });
+                });
                 this.gameOver(this.level);
             } else {
                 this.sound.play('hit', {
                     volume: .3
-                 });
+                });
                 this.isInvincible = true;
                 my.sprite.player.setTint(0xffffff); // Change color for invincibility. This does not work so we can just change this to audio later
                 this.time.delayedCall(this.invincibilityDuration, () => {
@@ -535,7 +542,7 @@ class Wizard extends Phaser.Scene {
                     bullet.body.velocity.y = direction.y * bulletSpeed;
                     this.sound.play('shoot', {
                         volume: 0.1
-                     });
+                    });
                 }
             }, [], this);
         }
