@@ -181,8 +181,9 @@ class Wizard extends Phaser.Scene {
             defaultKey: "dark wizard bullet",
             maxSize: 1000
         });
+        
     }
-    create() { 
+    create() {  
         this.bossMusic = this.sound.add('boss', { loop: true, volume: 0.3 });
 
         this.map = this.add.tilemap("Background-Map", 16, 16, 30, 30);
@@ -291,7 +292,11 @@ class Wizard extends Phaser.Scene {
         //make sure player isnt dead
         if (this.playerHealth === 0) {
             document.getElementById('description').innerHTML = `<h1>Player Health = 0<h1><h1>Player Score = ${this.playerScore}<h1>`
-
+            this.bossMusic.stop();
+            if(this.isBossMusicPlaying){
+                this.isBossMusicPlayer = false;
+                
+            }
             this.gameOver(this.level);
         }
         //movement controls
