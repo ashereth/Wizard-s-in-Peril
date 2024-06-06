@@ -10,7 +10,7 @@ class Wizard extends Phaser.Scene {
             { name: 'Damage Potion', apply: () => this.damage += 1 },
             { name: 'Speed Potion', apply: () => this.playerSpeed += 0.5 },
             { name: 'Hasty Projectiles Potion', apply: () => this.bulletSpeed += 50 },
-            { name: 'Projectile Magnification Potion', apply: () => this.bulletScale += 0.4 },
+            { name: 'Projectile Magnification Potion', apply: () => this.bulletScale += 0.2 },
             { name: 'Tome of Burst Shot', apply: () => this.numBullets += 1 },
             {
                 name: 'Health Potion',
@@ -144,7 +144,7 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.enemyDamage = 1;
         this.invincibilityDuration = 300;
-        this.darkWizardHitsToDestroy = 20;
+        this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
         this.spiderSpeed = 80;
         this.spiderHitsToDestory = 1;
