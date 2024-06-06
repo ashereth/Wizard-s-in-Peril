@@ -30,42 +30,6 @@ class Wizard extends Phaser.Scene {
             }
         ];
     }
-    //send player to game over scene
-    gameOver(level) {
-        //reset text on side of game
-        document.getElementById('description').innerHTML = `<p></p>`
-        this.scene.start('GameOverScene', { level: level });
-
-    }
-    //code for emitting a bullet
-    shootBullet(pointer) {
-        for (let i = 0; i < this.numBullets; i++) {
-            // Calculate delay for each bullet
-            let delay = i * 100; // Delay each bullet by 100ms incrementally
-
-            this.time.delayedCall(delay, () => {
-                let player = my.sprite.player;
-                let bullet = this.bullets.get(player.x, player.y);
-                if (bullet) {
-                    bullet.displayWidth = bullet.width * this.bulletScale;
-                    bullet.displayHeight = bullet.height * this.bulletScale;
-
-                    bullet.setActive(true);
-                    bullet.setVisible(true);
-
-                    // Calculate direction vector from player to pointer
-                    let direction = new Phaser.Math.Vector2(pointer.worldX - player.x, pointer.worldY - player.y);
-                    direction.normalize();
-
-                    // Set bullet velocity based on direction
-                    let bulletSpeed = this.bulletSpeed;
-                    bullet.body.velocity.x = direction.x * bulletSpeed;
-                    bullet.body.velocity.y = direction.y * bulletSpeed;
-                }
-            }, [], this);
-        }
-    }
-
     preload() {
         this.load.setPath("./assets/");
         //load background
@@ -76,7 +40,14 @@ class Wizard extends Phaser.Scene {
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         this.load.image("dark wizard", "Tiles/tile_0111.png");//load dark wizard pricture
         this.load.image("spider", "Tiles/tile_0122.png"); //load spider
-        this.load.image("collectable", 'Tiles/laserBlue08.png')
+        this.load.image("collectable", 'Tiles/laserBlue08.png');
+        this.load.audio("shoot", "Audio/laserLarge_000.ogg");
+        this.load.audio("levelUp", "Audio/powerUp11.ogg");
+        this.load.audio("boss", "Audio/spaceEngineLarge_000.ogg");
+        this.load.audio("hit", "Audio/lowDown.ogg");
+        this.load.audio("die", "Audio/slime_001.ogg");
+        this.load.audio("collect", "Audio/powerUp7.ogg");
+
         this.init();
         this.setPlayerInfoText();
 
@@ -217,6 +188,9 @@ class Wizard extends Phaser.Scene {
         this.physics.add.overlap(my.sprite.player, this.collectableGroup, (player, collectable) => {
             collectable.destroy();
             this.playerScore += this.scoreGainPerCollectable;
+            this.sound.play('collect', {
+                volume: .1
+             });
         });
 
         // debug key listener (assigned to F key)
@@ -325,6 +299,9 @@ class Wizard extends Phaser.Scene {
         this.scoreToLevel *= 1.25;
         this.spiderSpawnRate *= 0.75;
         this.cyclopsSpawnRate *= 0.75;
+        this.sound.play('levelUp', {
+            volume: .3
+         });
 
         // Ensure we have enough upgrades to choose from
         if (this.upgrades.length < 2) {
@@ -437,9 +414,16 @@ class Wizard extends Phaser.Scene {
     playerHitEnemy() {
         if (!this.isInvincible) {
             this.playerHealth -= this.enemyDamage;
+            
             if (this.playerHealth <= 0) {
+                this.sound.play('die', {
+                    volume: .3
+                 });
                 this.gameOver(this.level);
             } else {
+                this.sound.play('hit', {
+                    volume: .3
+                 });
                 this.isInvincible = true;
                 my.sprite.player.setTint(0xffffff); // Change color for invincibility. This does not work so we can just change this to audio later
                 this.time.delayedCall(this.invincibilityDuration, () => {
@@ -450,5 +434,43 @@ class Wizard extends Phaser.Scene {
         }
     }
 
+    //send player to game over scene
+    gameOver(level) {
+        //reset text on side of game
+        document.getElementById('description').innerHTML = `<p></p>`
+        this.scene.start('GameOverScene', { level: level });
+
+    }
+    //code for emitting a bullet
+    shootBullet(pointer) {
+        for (let i = 0; i < this.numBullets; i++) {
+            // Calculate delay for each bullet
+            let delay = i * 100; // Delay each bullet by 100ms incrementally
+
+            this.time.delayedCall(delay, () => {
+                let player = my.sprite.player;
+                let bullet = this.bullets.get(player.x, player.y);
+                if (bullet) {
+                    bullet.displayWidth = bullet.width * this.bulletScale;
+                    bullet.displayHeight = bullet.height * this.bulletScale;
+
+                    bullet.setActive(true);
+                    bullet.setVisible(true);
+
+                    // Calculate direction vector from player to pointer
+                    let direction = new Phaser.Math.Vector2(pointer.worldX - player.x, pointer.worldY - player.y);
+                    direction.normalize();
+
+                    // Set bullet velocity based on direction
+                    let bulletSpeed = this.bulletSpeed;
+                    bullet.body.velocity.x = direction.x * bulletSpeed;
+                    bullet.body.velocity.y = direction.y * bulletSpeed;
+                    this.sound.play('shoot', {
+                        volume: 0.1
+                     });
+                }
+            }, [], this);
+        }
+    }
 
 }
