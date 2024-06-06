@@ -402,8 +402,8 @@ class Wizard extends Phaser.Scene {
 
     //function called whenever player levels up
     levelUp() {
-        this.cyclopsSpawner.delay*=.90;
-        this.spiderSpawner.delay*=.95;
+        this.cyclopsSpawner.delay*=.85;
+        this.spiderSpawner.delay*=.90;
         this.level += 1;
         this.playerScore = 0;
         this.scoreToLevel *= 1.25;
@@ -412,6 +412,8 @@ class Wizard extends Phaser.Scene {
         });
         //every 5 levels spawn that many dark wizards
         if (this.level % 5 === 0) {
+            this.cyclopsSpeed*=1.1;
+            this.spiderSpeed*=1.1;
             for (let i = 0; i < Math.floor(this.level / 5); i++) {
                 this.spawnDarkWizard()
             }
