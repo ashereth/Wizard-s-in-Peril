@@ -224,6 +224,10 @@ class Wizard extends Phaser.Scene {
         //new group for wizard enemies
         this.darkWizardGroup = this.physics.add.group();
 
+        this.armoredEnemyGroup = this.physics.add.group();
+
+        this.knightGroup = this.physics.add.group();
+
         //new group for spider enemies
         this.spiderGroup = this.physics.add.group();
 
@@ -264,9 +268,19 @@ class Wizard extends Phaser.Scene {
         this.physics.add.overlap(this.bullets, this.darkWizardGroup, this.hitEnemy, null, this);
         //add collision between bullets and spider
         this.physics.add.overlap(this.bullets, this.spiderGroup, this.hitEnemy, null, this);
+        //add collision between bullets and armored enemy
+        this.physics.add.overlap(this.bullets, this.armoredEnemyGroup, this.hitEnemy, null, this);
+        //add collision between bullets and knights
+        this.physics.add.overlap(this.bullets, this.knightGroup, this.hitEnemy, null, this);
 
         // Add collision detection between cyclops and player
         this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitEnemy, null, this);
+
+        // Add collision detection between knight and player
+        this.physics.add.overlap(my.sprite.player, this.knightGroup, this.playerHitEnemy, null, this);
+        //add collision between armored enemies and player
+        this.physics.add.overlap(my.sprite.player, this.armoredEnemyGroup, this.playerHitEnemy, null, this);
+
 
         //add collision between wizards and player
         this.physics.add.overlap(my.sprite.player, this.darkWizardGroup, this.playerHitEnemy, null, this);
@@ -378,6 +392,12 @@ class Wizard extends Phaser.Scene {
         //make spider move toward player
         this.moveEnemyTowardsPlayer(this.spiderGroup, this.spiderSpeed);
 
+        //move knights toward player
+        this.moveEnemyTowardsPlayer(this.knightGroup, this.knightSpeed);
+
+        //move armored enemies toward player
+        this.moveEnemyTowardsPlayer(this.armoredEnemyGroup, this.armoredEnemySpeed);
+
         //play or stop the boss music based on dark wizard presence
         if (this.darkWizardGroup.countActive(true) > 0) {
             if (!this.isBossMusicPlaying) {
@@ -432,16 +452,20 @@ class Wizard extends Phaser.Scene {
     levelUp() {
         this.level += 1;
         //add a new enemy spawner at level 10
-        if (this.level===2) {
+        if (this.level===10) {
             //spawner for armored enemy
             this.armoredEnemySpawner = this.time.addEvent({
                 delay: this.armoredEnemySpawnRate,
-                callback: this.spawnArmoredEnemy,
+                callback: ()=>this.spawnEnemy(this.armoredEnemyHitsToDestroy, this.armoredEnemyScale, this.armoredEnemyGroup, "armored enemy"),
                 callbackScope: this,
                 loop: true
             })
         }
-        //for levels <10
+        //if level is above 5 have a chance to spawn a knight enemy
+        if(this.level>5 && (Phaser.Math.Between(0, 100))>66){
+            this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
+        }
+        //for levels <10 increase spawn rate of regular enemies
         if(this.level<=10){
             this.cyclopsSpawner.delay*=.90;
             this.spiderSpawner.delay*=.95;
