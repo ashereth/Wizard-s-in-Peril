@@ -539,7 +539,7 @@ class Wizard extends Phaser.Scene {
         let dropType = Phaser.Math.Between(0, 100);
 
         // 80%-90% droprate for upgrade collectable, 10%-20% droprate for health
-        if (dropType < 90) {
+        if (dropType < 80) {
             let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
             collectable.setActive(true);
             collectable.setVisible(true);
