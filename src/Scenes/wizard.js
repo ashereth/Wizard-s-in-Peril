@@ -7,27 +7,19 @@ class Wizard extends Phaser.Scene {
 
         // define the possible upgrades
         this.upgrades = [
-            { name: 'Damage Potion', apply: () => this.damage += 1 },
-            { name: 'Speed Potion', apply: () => this.playerSpeed += 0.5 },
-            { name: 'Hasty Projectiles Potion', apply: () => this.bulletSpeed += 50 },
-            { name: 'Projectile Magnification Potion', apply: () => this.bulletScale += 0.4 },
-            { name: 'Tome of Burst Shot', apply: () => this.numBullets += 1 },
-            {
-                name: 'Health Potion',
-                apply: () => {//player health should not go over 10
-                    if (this.playerHealth <= 8) {
-                        this.playerHealth += 2
-                    } else {
-                        this.playerHealth = 10
-                    }
-                },
-            },
+            { name: 'Damage Potion', apply: () => this.damage += 1, tile: "damage_potion_tile" },
+            { name: 'Speed Potion', apply: () => this.playerSpeed += 0.5, tile: "speed_potion_tile" },
+            { name: 'Hasty Projectiles Potion', apply: () => this.bulletSpeed += 50, tile: "hasty_tile" },
+            { name: 'Projectile Magnification Potion', apply: () => this.bulletScale += 0.4, tile: "project_tile" },
+            { name: 'Tome of Burst Shot', apply: () => this.numBullets += 1, tile: "burst_tile" },
+            { name: 'Elixir of Health Restoration', apply: () => this.playerHealth = this.maxHealth, tile: "health_potion_tile"},
             {
                 name: 'Tome of Mana Fortification', apply: () => {
                     this.maxBullets += 10//increase max bullets that can be spawned
                     this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
-                }
-            }
+                }, tile: "mana_tile"
+            },
+            { name: "Fountain of Life Amplification", apply: () => this.maxHealth += 2, tile: "health_refill_tile"}
         ];
     }
     //send player to game over scene
@@ -109,15 +101,23 @@ class Wizard extends Phaser.Scene {
         this.load.image("dark wizard", "Tiles/tile_0111.png");//load dark wizard pricture
         this.load.image("spider", "Tiles/tile_0122.png"); //load spider
         this.load.image("collectable", 'Tiles/laserBlue08.png')
+        this.load.image("collectable", 'Tiles/laserBlue08.png');
+        this.load.image("damage_potion_tile", "Tiles/tile_0115.png");
+        this.load.image("speed_potion_tile", "Tiles/tile_0113.png");
+        this.load.image("hasty_tile", "Tiles/tile_0130.png");
+        this.load.image("project_tile", "Tiles/tile_0118.png");
+        this.load.image("burst_tile", "Tiles/tile_0062.png");
+        this.load.image("health_potion_tile", "Tiles/tile_0114.png");
+        this.load.image("mana_tile", "Tiles/tile_0116.png");
+        this.load.image("health_refill_tile", "Tiles/tile_0020.png");
         this.init();
         this.setPlayerInfoText();
-
-
     }
 
     init() {
         //set initial player values
         this.playerHealth = 10;
+        this.maxHealth = 10;
         this.playerScore = 0;
         //how may points to level up
         this.scoreToLevel = 50;
