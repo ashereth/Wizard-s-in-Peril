@@ -66,11 +66,43 @@ class Wizard extends Phaser.Scene {
         }
     }
 
+    darkWizardShoot() {
+        //make the wizards shoot
+        this.darkWizardGroup.children.each(wizard => {
+            for (let i = 1; i <= 4; i++) {
+                let bullet = this.darkWizardBullets.get(wizard.x, wizard.y);
+                if (bullet) {
+                    bullet.displayWidth = bullet.width * .1;
+                    bullet.displayHeight = bullet.height * .1;
+
+                    bullet.setActive(true);
+                    bullet.setVisible(true);
+                    // Set bullet velocity based on direction
+                    let bulletSpeed = this.bulletSpeed;
+                    if (i === 1) {
+                        bullet.body.velocity.x = bulletSpeed * 1;
+                        bullet.body.velocity.y = bulletSpeed * 0;
+                    } else if (i === 2) {
+                        bullet.body.velocity.x = bulletSpeed * -1;
+                        bullet.body.velocity.y = bulletSpeed * 0;
+                    } else if (i === 3) {
+                        bullet.body.velocity.x = bulletSpeed * 0;
+                        bullet.body.velocity.y = bulletSpeed * 1;
+                    } else if (i === 4) {
+                        bullet.body.velocity.x = bulletSpeed * 0;
+                        bullet.body.velocity.y = bulletSpeed * -1;
+                    }
+                }
+            }
+        })
+    }
+
     preload() {
         this.load.setPath("./assets/");
         //load background
         this.load.image("tilemap_tiles", "Tilemap/tilemap_packed.png");// Packed tilemap
         this.load.image("bullet", 'Tiles/dotGreen.png');
+        this.load.image("dark wizard bullet", "Tiles/tank_explosion4.png");
         this.load.tilemapTiledJSON("Background-Map", "Background-Map.tmj");   // Tilemap in JSON
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
@@ -108,16 +140,15 @@ class Wizard extends Phaser.Scene {
         this.cyclopsSCALE = 1.25;
         this.cyclopsSpawnRate = 2000;
         this.cyclopsHitsToDestroy = 3;
-        this.cyclopsSpeed = 50;
+        this.cyclopsSpeed = 40;
         this.damage = 1;
         this.enemyDamage = 1;
         this.invincibilityDuration = 300;
         this.darkWizardHitsToDestroy = 20;
-        this.wizardSpeed = 25;
-        this.wizardSpawnRate = 5000;
-        this.spiderSpeed = 100;
+        this.wizardSpeed = 20;
+        this.spiderSpeed = 80;
         this.spiderHitsToDestory = 1;
-        this.spiderSpawnRate = 2000;
+        this.spiderSpawnRate = 1500;
         this.spiderSCALE = .50;
 
 
@@ -126,10 +157,10 @@ class Wizard extends Phaser.Scene {
             defaultKey: 'bullet',
             maxSize: this.maxBullets,
         });
-
+        //group for wizard bullets
         this.darkWizardBullets = this.physics.add.group({
-            defaultKey: 'bullet',
-            maxSize: this.maxBullets,
+            defaultKey: "dark wizard bullet",
+            maxSize: 1000
         });
     }
     create() {
@@ -181,16 +212,15 @@ class Wizard extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
-        //spawn enemy wizards
         this.time.addEvent({
-            delay: this.wizardSpawnRate,
-            callback: this.spawnDarkWizard,
+            delay: this.spiderSpawnRate,
+            callback: this.spawnSpider,
             callbackScope: this,
             loop: true
         })
         this.time.addEvent({
-            delay: this.spiderSpawnRate,
-            callback: this.spawnSpider,
+            delay: 1000,
+            callback: this.darkWizardShoot,
             callbackScope: this,
             loop: true
         })
@@ -212,6 +242,8 @@ class Wizard extends Phaser.Scene {
         //add collision between spider and player
         this.physics.add.overlap(my.sprite.player, this.spiderGroup, this.playerHitEnemy, null, this);
 
+        this.physics.add.overlap(my.sprite.player, this.darkWizardBullets, this.playerHitEnemy, null, this);
+
 
         //player can pick up collectables
         this.physics.add.overlap(my.sprite.player, this.collectableGroup, (player, collectable) => {
@@ -224,8 +256,8 @@ class Wizard extends Phaser.Scene {
             this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
             this.physics.world.debugGraphic.clear()
         }, this)
-
     }
+
     update() {
         //update the score and level text
         this.setPlayerInfoText()
@@ -278,7 +310,15 @@ class Wizard extends Phaser.Scene {
             }
         }, this);
 
-        
+        // Update dark wizard bullets and delete them
+        this.darkWizardBullets.children.each(bullet => {
+            //delete bullets that are offscreen
+            if (bullet.active && (bullet.y < 0 || bullet.y > this.mapHeight || bullet.x < 0 || bullet.x > this.mapWidth)) {
+                bullet.setActive(false);
+                bullet.setVisible(false);
+                bullet.destroy();
+            }
+        }, this);
 
         // Makes cyclops move towards player
         this.cyclopsGroup.children.each(cyclops => {
@@ -295,12 +335,11 @@ class Wizard extends Phaser.Scene {
                 let direction = new Phaser.Math.Vector2(my.sprite.player.x - wizard.x, my.sprite.player.y - wizard.y);
                 direction.normalize();
                 wizard.setVelocity(direction.x * this.wizardSpeed, direction.y * this.wizardSpeed);
-                //make the wizards shoot in all four directions
             }
         }, this);
 
         //make spider move toward player
-        this.spiderGroup.children.each(spider=> {
+        this.spiderGroup.children.each(spider => {
             if (spider.active) {
                 let direction = new Phaser.Math.Vector2(my.sprite.player.x - spider.x, my.sprite.player.y - spider.y);
                 direction.normalize();
@@ -323,8 +362,15 @@ class Wizard extends Phaser.Scene {
         this.level += 1;
         this.playerScore = 0;
         this.scoreToLevel *= 1.25;
-        this.spiderSpawnRate *= 0.75;
-        this.cyclopsSpawnRate *= 0.75;
+        this.spiderSpawnRate *= 0.8;
+        this.cyclopsSpawnRate *= 0.8;
+        //every 5 levels spawn that many dark wizards
+        if (this.level % 5===0) {
+            for (let i = 0; i < Math.floor(this.level / 5); i++) {
+                console.log(Math.floor(this.level / 5))
+                this.spawnDarkWizard()
+            }
+        }
 
         // Ensure we have enough upgrades to choose from
         if (this.upgrades.length < 2) {
@@ -342,13 +388,11 @@ class Wizard extends Phaser.Scene {
         }
 
         // Show upgrades to the player
-        console.log(selectedUpgrades)
         this.displayUpgradeChoices(selectedUpgrades);
     }
 
     displayUpgradeChoices(upgrades) {
         // Pause game and go to popup upgrades
-        console.log('Selected Upgrades:', upgrades); // Debugging statement
         this.scene.pause();
         this.scene.launch('PopupScene', { upgrades: upgrades, wizardScene: this });
     }
@@ -412,11 +456,6 @@ class Wizard extends Phaser.Scene {
         collectable.setVisible(true);
         collectable.body.setAllowGravity(false);
         collectable.setScale(.2);
-    }
-
-    darkWizardShoot(wizard, velocityX, velocityY) {
-        var projectile = this.darkWizardBullets.create(wizard.x, wizard.y, 'bullet')
-        this.physics.moveTo(projectile, velocityX, velocityY, this.bulletSpeed);
     }
 
     hitEnemy(bullet, enemy) {
