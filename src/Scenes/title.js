@@ -31,9 +31,9 @@ class Title extends Phaser.Scene {
         ];
         this.path = new Phaser.Curves.Spline(points);
         
-        my.sprite.player = this.add.follower(this.path, 200, 200, "player");
-        my.sprite.player.setScale(3.5);
-        my.sprite.player.startFollow({
+        my.sprite.titlePlayer = this.add.follower(this.path, 200, 200, "player");
+        my.sprite.titlePlayer.setScale(3.5);
+        my.sprite.titlePlayer.startFollow({
             duration: 4500,
             repeat: -1,
             yoyo: true,
@@ -81,6 +81,7 @@ class Title extends Phaser.Scene {
         creditsScene.setStroke("#000000", 4);
 
         this.input.once("pointerdown", function () {
+            this.scene.stop("Title")
             this.scene.start("wizardScene");
         }, this);
     }
@@ -90,8 +91,8 @@ class Title extends Phaser.Scene {
         const shouldShoot = Phaser.Math.Between(0, 100) < 5;
         if (shouldShoot && this.bullet.length < this.enemyMaxBullets) {
             const playerBullet = this.add.sprite(
-                my.sprite.player.x,
-                my.sprite.player.y + (my.sprite.player.displayHeight/2),
+                my.sprite.titlePlayer.x,
+                my.sprite.titlePlayer.y + (my.sprite.titlePlayer.displayHeight/2),
                 "bullet"
             );
             playerBullet.setScale(2.5);
