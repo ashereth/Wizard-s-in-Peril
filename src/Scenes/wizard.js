@@ -403,7 +403,7 @@ class Wizard extends Phaser.Scene {
     //function called whenever player levels up
     levelUp() {
         this.cyclopsSpawner.delay*=.85;
-        this.spiderSpawner.delay*=.90;
+        this.spiderSpawner.delay*=.95;
         this.level += 1;
         this.playerScore = 0;
         this.scoreToLevel *= 1.25;
@@ -541,6 +541,7 @@ class Wizard extends Phaser.Scene {
     gameOver(level) {
         //reset text on side of game
         document.getElementById('description').innerHTML = `<p></p>`
+        this.scene.stop('wizardScene');
         this.scene.start('GameOverScene', { level: level });
 
     }
