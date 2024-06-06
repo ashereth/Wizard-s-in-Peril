@@ -26,9 +26,8 @@ class PopupScene extends Phaser.Scene {
             // Display the first upgrade option
             this.popupBg1 = this.add.rectangle(400, 450, 500, 600, 0x000000, 0.8);
             this.upgradeText1 = this.add.text(420, 450, this.upgrades[0].name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-            this.upgradeButton1 = this.add.sprite(400, 550, 'button').setInteractive();
-            this.upgradeButton1.displayWidth = 200; // Set desired width
-            this.upgradeButton1.displayHeight = 100; // Set desired height
+            this.upgradeButton1 = this.add.sprite(400, 550, this.upgrades[0].tile).setInteractive();
+            this.upgradeButton1.setScale(4);
             this.upgradeButton1.on('pointerdown', () => {
                 this.selectUpgrade(this.upgrades[0]);
             });
@@ -36,9 +35,8 @@ class PopupScene extends Phaser.Scene {
             // Display the second upgrade option
             this.popupBg2 = this.add.rectangle(1000, 450, 500, 600, 0x000000, 0.8);
             this.upgradeText2 = this.add.text(1020, 450, this.upgrades[1].name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-            this.upgradeButton2 = this.add.sprite(1000, 550, 'button').setInteractive();
-            this.upgradeButton2.displayWidth = 200; // Set desired width
-            this.upgradeButton2.displayHeight = 100; // Set desired height
+            this.upgradeButton2 = this.add.sprite(1000, 550, this.upgrades[1].tile).setInteractive();
+            this.upgradeButton2.setScale(4);
             this.upgradeButton2.on('pointerdown', () => {
                 this.selectUpgrade(this.upgrades[1]);
             });
