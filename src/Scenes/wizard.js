@@ -428,6 +428,10 @@ class Wizard extends Phaser.Scene {
         let selectedUpgrades = [];
         while (selectedUpgrades.length < 2) {
             let randomUpgrade = Phaser.Utils.Array.GetRandom(this.upgrades);
+            //stop showing bullet scale upgrade after getting it twice
+            if (this.bulletScale>=1.0 && randomUpgrade.name==='Projectile Magnification Potion'){
+                continue;
+            }
             if (!selectedUpgrades.includes(randomUpgrade)) {
                 selectedUpgrades.push(randomUpgrade);
             }
