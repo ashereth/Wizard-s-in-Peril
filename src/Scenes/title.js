@@ -47,7 +47,7 @@ class Title extends Phaser.Scene {
         this.cKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
         this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
 
-        const titleText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 100, "Wizard's in Peril", {
+        const titleText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 100, "Wizards in Peril", {
             fontFamily: "Arial Black",
             fontSize: 64
         }).setOrigin(0.5);
