@@ -398,7 +398,7 @@ class Wizard extends Phaser.Scene {
 
     setPlayerInfoText() {
         document.getElementById('description').innerHTML = `
-            <h1>Health = ${this.playerHealth}<h1>
+            <h1>Health = ${this.playerHealth}/${this.maxHealth}<h1>
             <h1>Your Level = ${this.level}<h1>
             <h1>%${parseInt((this.playerScore / this.scoreToLevel) * 100)} to level ${this.level + 1}<h1>
             <h1>Mana = ${this.maxBullets - this.bullets.getLength()}/${this.maxBullets}</h1>`
@@ -407,7 +407,7 @@ class Wizard extends Phaser.Scene {
 
     //function called whenever player levels up
     levelUp() {
-        this.cyclopsSpawner.delay*=.85;
+        this.cyclopsSpawner.delay*=.90;
         this.spiderSpawner.delay*=.95;
         this.level += 1;
         this.playerScore = 0;
