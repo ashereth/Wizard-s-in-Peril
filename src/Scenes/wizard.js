@@ -19,7 +19,10 @@ class Wizard extends Phaser.Scene {
                     this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", apply: () => this.maxHealth += 2, tile: "health_refill_tile"}
+            { name: "Fountain of Life Amplification", apply: () => {
+                this.maxHealth += 2,
+                this.playerHealth+=2
+            }, tile: "health_refill_tile"}
         ];
     }
     //send player to game over scene
@@ -214,13 +217,13 @@ class Wizard extends Phaser.Scene {
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // Spawn an enemy cyclops 
-        this.time.addEvent({
+        this.cyclopsSpawner = this.time.addEvent({
             delay: this.cyclopsSpawnRate,
             callback: this.spawnCyclops,
             callbackScope: this,
             loop: true
         });
-        this.time.addEvent({
+        this.spiderSpawner = this.time.addEvent({
             delay: this.spiderSpawnRate,
             callback: this.spawnSpider,
             callbackScope: this,
@@ -370,11 +373,11 @@ class Wizard extends Phaser.Scene {
 
     //function called whenever player levels up
     levelUp() {
+        this.cyclopsSpawner.delay*=.90;
+        this.spiderSpawner.delay*=.95;
         this.level += 1;
         this.playerScore = 0;
         this.scoreToLevel *= 1.25;
-        this.spiderSpawnRate *= 0.75;
-        this.cyclopsSpawnRate *= 0.75;
         this.sound.play('levelUp', {
             volume: .3
         });
@@ -429,7 +432,8 @@ class Wizard extends Phaser.Scene {
         wizard.setActive(true)
         wizard.setVisible(true)
         wizard.body.setAllowGravity(false);
-        wizard.hitsLeft = this.darkWizardHitsToDestroy;
+        wizard.hitsLeft = this.darkWizardHitsToDestroy*Math.floor(this.level/5);
+        console.log(wizard.hitsLeft);
     }
 
     spawnCyclops() {
