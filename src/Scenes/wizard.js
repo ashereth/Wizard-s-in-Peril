@@ -151,7 +151,7 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.enemyDamage = 1;
         this.invincibilityDuration = 300;
-        this.darkWizardHitsToDestroy = 20;
+        this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
         this.spiderSpeed = 80;
         this.spiderHitsToDestory = 1;
