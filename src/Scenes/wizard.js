@@ -152,12 +152,12 @@ class Wizard extends Phaser.Scene {
         this.SCALE = .75;
 
         this.cyclopsSCALE = 1.25;
-        this.cyclopsSpawnRate = 2000;
+        this.cyclopsSpawnRate = 2500;
         this.cyclopsHitsToDestroy = 3;
         this.cyclopsSpeed = 40;
 
         this.armoredEnemyScale = 1.25;
-        this.armoredEnemySpawnRate = 5000;
+        this.armoredEnemySpawnRate = 5500;
         this.armoredEnemyHitsToDestroy = 15;
         this.armoredEnemySpeed = 20;
 
@@ -173,9 +173,9 @@ class Wizard extends Phaser.Scene {
         this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
 
-        this.spiderSpeed = 80;
+        this.spiderSpeed = 60;
         this.spiderHitsToDestory = 1;
-        this.spiderSpawnRate = 1500;
+        this.spiderSpawnRate = 2000;
         this.spiderSCALE = .50;
 
 
