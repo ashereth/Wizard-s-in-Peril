@@ -23,7 +23,7 @@ class Wizard extends Phaser.Scene {
                 this.maxHealth += 2,
                 this.playerHealth+=2
             }, tile: "health_refill_tile"},
-            {name: "Magnetism Charm", apply: () => this.collectableSpeed+=10, tile: "health_refill_tile"}
+            {name: "Magnetism Charm", apply: () => this.collectableSpeed+=10, tile: "magnet"}
         ];
     }
     //send player to game over scene
@@ -121,7 +121,7 @@ class Wizard extends Phaser.Scene {
         this.load.audio("hit", "Audio/lowDown.ogg");
         this.load.audio("die", "Audio/slime_001.ogg");
         this.load.audio("collect", "Audio/powerUp7.ogg");
-
+        this.load.image('magnet', "Tiles/tile_0092.png");
         this.init();
         this.setPlayerInfoText();
     }
