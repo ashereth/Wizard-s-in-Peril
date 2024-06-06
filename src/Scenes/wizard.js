@@ -8,23 +8,23 @@ class Wizard extends Phaser.Scene {
 
         // define the possible upgrades
         this.upgrades = [
-            { name: 'Damage Potion', apply: () => this.damage += 1, tile: "damage_potion_tile" },
-            { name: 'Speed Potion', apply: () => this.playerSpeed += 0.5, tile: "speed_potion_tile" },
-            { name: 'Hasty Projectiles Potion', apply: () => this.bulletSpeed += 50, tile: "hasty_tile" },
-            { name: 'Projectile Magnification Potion', apply: () => this.bulletScale += 0.4, tile: "project_tile" },
-            { name: 'Tome of Burst Shot', apply: () => this.numBullets += 1, tile: "burst_tile" },
-            { name: 'Elixir of Health Restoration', apply: () => this.playerHealth = this.maxHealth, tile: "health_potion_tile"},
+            { name: 'Damage Potion', description: "+1 Damage", apply: () => this.damage += 1, tile: "damage_potion_tile" },
+            { name: 'Speed Potion', description: "+0.5 Speed",apply: () => this.playerSpeed += 0.5, tile: "speed_potion_tile" },
+            { name: 'Hasty Projectiles Potion', description: "+50 Projectile Speed", apply: () => this.bulletSpeed += 50, tile: "hasty_tile" },
+            { name: 'Projectile Magnification Potion', description: "+0.4 Projectile Size", apply: () => this.bulletScale += 0.4, tile: "project_tile" },
+            { name: 'Tome of Burst Shot', description: "+1 Projectile Per Shot", apply: () => this.numBullets += 1, tile: "burst_tile" },
+            { name: 'Elixir of Health Restoration', description: "Refill to Full Health", apply: () => this.playerHealth = this.maxHealth, tile: "health_potion_tile"},
             {
-                name: 'Tome of Mana Fortification', apply: () => {
-                    this.maxBullets += 10//increase max bullets that can be spawned
+                name: 'Tome of Mana Fortification', description: "+3 Max Projectiles", apply: () => {
+                    this.maxBullets += 3//increase max bullets that can be spawned
                     this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", apply: () => {
+            { name: "Fountain of Life Amplification", description: "+2 Health & +2 Max Health", apply: () => {
                 this.maxHealth += 2,
                 this.playerHealth+=2
             }, tile: "health_refill_tile"},
-            {name: "Magnetism Charm", apply: () => this.collectableSpeed+=10, tile: "magnet"}
+            {name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed+=10, tile: "magnet"}
         ];
     }
     //send player to game over scene
@@ -142,7 +142,7 @@ class Wizard extends Phaser.Scene {
         //how many bullets get shot each click
         this.numBullets = 1;
         //maximum number of bullets that can be on screen at a time
-        this.maxBullets = 20;
+        this.maxBullets = 3;
         //amount of score gained per collectable pickup
         this.scoreGainPerCollectable = 10;
         this.collectableSpeed = 0;
