@@ -44,6 +44,8 @@ class Title extends Phaser.Scene {
         this.bullet = [];
         this.enemyMaxBullets = 3;
 
+        
+
         this.cKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
         this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
 
@@ -88,6 +90,7 @@ class Title extends Phaser.Scene {
 
     update() {
         let my = this.my;
+        
         const shouldShoot = Phaser.Math.Between(0, 100) < 5;
         if (shouldShoot && this.bullet.length < this.enemyMaxBullets) {
             const playerBullet = this.add.sprite(
@@ -125,6 +128,7 @@ class Title extends Phaser.Scene {
                 i--;
             }
         }
+        
 
         if (Phaser.Input.Keyboard.JustDown(this.cKey)) {
             this.scene.start("Controls");
