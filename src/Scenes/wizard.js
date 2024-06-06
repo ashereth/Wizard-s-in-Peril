@@ -23,7 +23,8 @@ class Wizard extends Phaser.Scene {
             { name: "Fountain of Life Amplification", apply: () => {
                 this.maxHealth += 2,
                 this.playerHealth+=2
-            }, tile: "health_refill_tile"}
+            }, tile: "health_refill_tile"},
+            {name: "Magnetism Charm", apply: () => this.collectableSpeed+=10, tile: "magnet"}
         ];
     }
     //send player to game over scene
@@ -121,7 +122,7 @@ class Wizard extends Phaser.Scene {
         this.load.audio("hit", "Audio/lowDown.ogg");
         this.load.audio("die", "Audio/slime_001.ogg");
         this.load.audio("collect", "Audio/powerUp7.ogg");
-
+        this.load.image('magnet', "Tiles/tile_0092.png");
         this.init();
         this.setPlayerInfoText();
     }
@@ -144,20 +145,26 @@ class Wizard extends Phaser.Scene {
         this.maxBullets = 20;
         //amount of score gained per collectable pickup
         this.scoreGainPerCollectable = 10;
+        this.collectableSpeed = 0;
 
         this.mapWidth = 16 * 30;
         this.mapHeight = 16 * 30;
         this.playerSpeed = 1.5;
         this.SCALE = .75;
+
         this.cyclopsSCALE = 1.25;
         this.cyclopsSpawnRate = 2000;
         this.cyclopsHitsToDestroy = 3;
         this.cyclopsSpeed = 40;
+
         this.damage = 1;
         this.enemyDamage = 1;
+
         this.invincibilityDuration = 300;
+
         this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
+
         this.spiderSpeed = 80;
         this.spiderHitsToDestory = 1;
         this.spiderSpawnRate = 1500;
@@ -375,6 +382,13 @@ class Wizard extends Phaser.Scene {
                 this.isBossMusicPlaying = false;
             }
         }
+        this.collectableGroup.children.each(collectable => {
+            if (collectable.active) {
+                let direction = new Phaser.Math.Vector2(my.sprite.player.x - collectable.x, my.sprite.player.y - collectable.y);
+                direction.normalize();
+                collectable.setVelocity(direction.x * this.collectableSpeed, direction.y * this.collectableSpeed);
+            }
+        }, this);
     }
 
     setPlayerInfoText() {
@@ -401,11 +415,6 @@ class Wizard extends Phaser.Scene {
             for (let i = 0; i < Math.floor(this.level / 5); i++) {
                 this.spawnDarkWizard()
             }
-        }
-
-        // Ensure we have enough upgrades to choose from
-        if (this.upgrades.length < 2) {
-            return;
         }
 
         // Select two distinct random upgrades
