@@ -13,18 +13,15 @@ class Wizard extends Phaser.Scene {
             { name: 'Hasty Projectiles Potion', description: "+50 Projectile Speed", apply: () => this.bulletSpeed += 50, tile: "hasty_tile" },
             { name: 'Projectile Magnification Potion', description: "+0.4 Projectile Size", apply: () => this.bulletScale += 0.4, tile: "project_tile" },
             { name: 'Tome of Burst Shot', description: "+1 Projectile Per Shot", apply: () => this.numBullets += 1, tile: "burst_tile" },
-            { name: 'Elixir of Health Restoration', description: "Refill to Full Health", apply: () => this.playerHealth = this.maxHealth, tile: "health_potion_tile"},
+            //{ name: 'Elixir of Health Restoration', description: "Refill to Full Health", apply: () => this.playerHealth = this.maxHealth, tile: "health_potion_tile"},
             {
                 name: 'Tome of Mana Fortification', description: "+3 Max Projectiles", apply: () => {
                     this.maxBullets += 3//increase max bullets that can be spawned
                     this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", description: "+2 Health & +2 Max Health", apply: () => {
-                this.maxHealth += 2,
-                this.playerHealth+=2
-            }, tile: "health_refill_tile"},
-            {name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed+=10, tile: "magnet"}
+            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile"},
+            { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet"}
         ];
     }
     //send player to game over scene
@@ -112,7 +109,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("hasty_tile", "Tiles/tile_0130.png");
         this.load.image("project_tile", "Tiles/tile_0118.png");
         this.load.image("burst_tile", "Tiles/tile_0062.png");
-        this.load.image("health_potion_tile", "Tiles/tile_0114.png");
+        this.load.image("healthCollectable", "Tiles/tile_0114.png");
         this.load.image("mana_tile", "Tiles/tile_0116.png");
         this.load.image("health_refill_tile", "Tiles/tile_0020.png");
         this.load.image("collectable", 'Tiles/laserBlue08.png');
@@ -123,6 +120,8 @@ class Wizard extends Phaser.Scene {
         this.load.audio("die", "Audio/slime_001.ogg");
         this.load.audio("collect", "Audio/powerUp7.ogg");
         this.load.image('magnet', "Tiles/tile_0092.png");
+        this.load.image("armored enemy", 'Tiles/tile_0087.png');
+        this.load.image("knight enemy", 'Tiles/tile_0096.png');
         this.init();
         this.setPlayerInfoText();
     }
@@ -157,10 +156,19 @@ class Wizard extends Phaser.Scene {
         this.cyclopsHitsToDestroy = 3;
         this.cyclopsSpeed = 40;
 
+        this.armoredEnemyScale = 1.25;
+        this.armoredEnemySpawnRate = 5000;
+        this.armoredEnemyHitsToDestroy = 15;
+        this.armoredEnemySpeed = 20;
+
+        this.knightScale = 1.75;
+        this.knightHitsToDestroy = 200;
+        this.knightSpeed = 10;
+
         this.damage = 1;
         this.enemyDamage = 1;
 
-        this.invincibilityDuration = 300;
+        this.invincibilityDuration = 400;
 
         this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
@@ -199,7 +207,7 @@ class Wizard extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, this.mapWidth, this.mapHeight);
         this.cameras.main.setBounds(0, 0, this.mapWidth, this.mapHeight);
         this.cameras.main.startFollow(my.sprite.player, true, .1, .1);
-        this.cameras.main.setZoom(4.0);
+        this.cameras.main.setZoom(3.5);
 
         // set up Phaser-provided cursor key input
         cursors = this.input.keyboard.createCursorKeys();
@@ -216,29 +224,36 @@ class Wizard extends Phaser.Scene {
         //new group for wizard enemies
         this.darkWizardGroup = this.physics.add.group();
 
+        this.armoredEnemyGroup = this.physics.add.group();
+
+        this.knightGroup = this.physics.add.group();
+
         //new group for spider enemies
         this.spiderGroup = this.physics.add.group();
 
         //create a group for collectable stuff to be dropped when an enemy dies
         this.collectableGroup = this.physics.add.group();
 
+        // makes group for health pickups
+        this.healthGroup = this.physics.add.group();
+
         // Handle mouse click to shoot
         this.input.on('pointerdown', this.shootBullet, this);
-        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // Spawn an enemy cyclops 
         this.cyclopsSpawner = this.time.addEvent({
             delay: this.cyclopsSpawnRate,
-            callback: this.spawnCyclops,
+            callback: ()=>this.spawnEnemy(this.cyclopsHitsToDestroy, this.cyclopsSCALE, this.cyclopsGroup, 'cyclops'),
             callbackScope: this,
             loop: true
         });
         this.spiderSpawner = this.time.addEvent({
             delay: this.spiderSpawnRate,
-            callback: this.spawnSpider,
+            callback: ()=>this.spawnEnemy(this.spiderHitsToDestory, this.spiderSCALE, this.spiderGroup, 'spider'),
             callbackScope: this,
             loop: true
         })
+        //make dark wizards shoot
         this.time.addEvent({
             delay: 1000,
             callback: this.darkWizardShoot,
@@ -253,9 +268,19 @@ class Wizard extends Phaser.Scene {
         this.physics.add.overlap(this.bullets, this.darkWizardGroup, this.hitEnemy, null, this);
         //add collision between bullets and spider
         this.physics.add.overlap(this.bullets, this.spiderGroup, this.hitEnemy, null, this);
+        //add collision between bullets and armored enemy
+        this.physics.add.overlap(this.bullets, this.armoredEnemyGroup, this.hitEnemy, null, this);
+        //add collision between bullets and knights
+        this.physics.add.overlap(this.bullets, this.knightGroup, this.hitEnemy, null, this);
 
         // Add collision detection between cyclops and player
         this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitEnemy, null, this);
+
+        // Add collision detection between knight and player
+        this.physics.add.overlap(my.sprite.player, this.knightGroup, this.playerHitEnemy, null, this);
+        //add collision between armored enemies and player
+        this.physics.add.overlap(my.sprite.player, this.armoredEnemyGroup, this.playerHitEnemy, null, this);
+
 
         //add collision between wizards and player
         this.physics.add.overlap(my.sprite.player, this.darkWizardGroup, this.playerHitEnemy, null, this);
@@ -273,6 +298,16 @@ class Wizard extends Phaser.Scene {
             this.sound.play('collect', {
                 volume: .1
             });
+        });
+
+        this.physics.add.overlap(my.sprite.player, this.healthGroup, (player, healthCollectable) => {
+            healthCollectable.destroy();
+            if (this.playerHealth < this.maxHealth) {
+                this.playerHealth += 1;
+                this.sound.play('collect', {
+                    volume: .1
+                });
+            }
         });
 
         // debug key listener (assigned to F key)
@@ -349,31 +384,19 @@ class Wizard extends Phaser.Scene {
         }, this);
 
         // Makes cyclops move towards player
-        this.cyclopsGroup.children.each(cyclops => {
-            if (cyclops.active) {
-                let direction = new Phaser.Math.Vector2(my.sprite.player.x - cyclops.x, my.sprite.player.y - cyclops.y);
-                direction.normalize();
-                cyclops.setVelocity(direction.x * this.cyclopsSpeed, direction.y * this.cyclopsSpeed);
-            }
-        }, this);
+        this.moveEnemyTowardsPlayer(this.cyclopsGroup, this.cyclopsSpeed);
 
         //make wizards move toward player
-        this.darkWizardGroup.children.each(wizard => {
-            if (wizard.active) {
-                let direction = new Phaser.Math.Vector2(my.sprite.player.x - wizard.x, my.sprite.player.y - wizard.y);
-                direction.normalize();
-                wizard.setVelocity(direction.x * this.wizardSpeed, direction.y * this.wizardSpeed);
-            }
-        }, this);
+        this.moveEnemyTowardsPlayer(this.darkWizardGroup, this.wizardSpeed);
 
         //make spider move toward player
-        this.spiderGroup.children.each(spider => {
-            if (spider.active) {
-                let direction = new Phaser.Math.Vector2(my.sprite.player.x - spider.x, my.sprite.player.y - spider.y);
-                direction.normalize();
-                spider.setVelocity(direction.x * this.spiderSpeed, direction.y * this.spiderSpeed);
-            }
-        }, this);
+        this.moveEnemyTowardsPlayer(this.spiderGroup, this.spiderSpeed);
+
+        //move knights toward player
+        this.moveEnemyTowardsPlayer(this.knightGroup, this.knightSpeed);
+
+        //move armored enemies toward player
+        this.moveEnemyTowardsPlayer(this.armoredEnemyGroup, this.armoredEnemySpeed);
 
         //play or stop the boss music based on dark wizard presence
         if (this.darkWizardGroup.countActive(true) > 0) {
@@ -394,6 +417,26 @@ class Wizard extends Phaser.Scene {
                 collectable.setVelocity(direction.x * this.collectableSpeed, direction.y * this.collectableSpeed);
             }
         }, this);
+
+        // this makes it so the magnet upgrade works on the health pickups
+        // comment this out to make it stop working with the magnet upgrade
+        // this.healthGroup.children.each(healthCollectable => {
+        //     if (healthCollectable.active) {
+        //         let direction = new Phaser.Math.Vector2(my.sprite.player.x - healthCollectable.x, my.sprite.player.y - healthCollectable.y);
+        //         direction.normalize();
+        //         healthCollectable.setVelocity(direction.x * this.collectableSpeed, direction.y * this.collectableSpeed);
+        //     }
+        // }, this);
+    }
+
+    moveEnemyTowardsPlayer(enemyGroup, enemySpeed){
+        enemyGroup.children.each(enemy => {
+            if (enemy.active) {
+                let direction = new Phaser.Math.Vector2(my.sprite.player.x - enemy.x, my.sprite.player.y - enemy.y);
+                direction.normalize();
+                enemy.setVelocity(direction.x * enemySpeed, direction.y * enemySpeed);
+            }
+        }, this);
     }
 
     setPlayerInfoText() {
@@ -407,11 +450,34 @@ class Wizard extends Phaser.Scene {
 
     //function called whenever player levels up
     levelUp() {
-        this.cyclopsSpawner.delay*=.90;
-        this.spiderSpawner.delay*=.95;
         this.level += 1;
+        //add a new enemy spawner at level 10
+        if (this.level===10) {
+            //spawner for armored enemy
+            this.armoredEnemySpawner = this.time.addEvent({
+                delay: this.armoredEnemySpawnRate,
+                callback: ()=>this.spawnEnemy(this.armoredEnemyHitsToDestroy, this.armoredEnemyScale, this.armoredEnemyGroup, "armored enemy"),
+                callbackScope: this,
+                loop: true
+            })
+        }
+        //if level is above 5 have a chance to spawn a knight enemy
+        if(this.level>5 && (Phaser.Math.Between(0, 100))>66){
+            this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
+        }
+        //for levels <10 increase spawn rate of regular enemies
+        if(this.level<=10){
+            this.cyclopsSpawner.delay*=.90;
+            this.spiderSpawner.delay*=.95;
+        }
+        
+        //reset player score
         this.playerScore = 0;
-        this.scoreToLevel *= 1.25;
+        //increase time to level up to level 20
+        if (this.level<20) {
+            this.scoreToLevel *= 1.25;
+        }
+        
         this.sound.play('levelUp', {
             volume: .3
         });
@@ -420,7 +486,7 @@ class Wizard extends Phaser.Scene {
             this.cyclopsSpeed*=1.1;
             this.spiderSpeed*=1.1;
             for (let i = 0; i < Math.floor(this.level / 5); i++) {
-                this.spawnDarkWizard()
+                this.spawnEnemy(this.darkWizardHitsToDestroy, this.cyclopsSCALE*1.5, this.darkWizardGroup, 'dark wizard')
             }
         }
 
@@ -452,7 +518,7 @@ class Wizard extends Phaser.Scene {
         this.scene.resume();
     }
 
-    spawnDarkWizard() {
+    spawnEnemy(hitsToDestroy, scale, enemyGroup, imageKey){
         let positions = [
             { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
             { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
@@ -460,52 +526,44 @@ class Wizard extends Phaser.Scene {
             { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(this.mapHeight, this.mapHeight + 50) }
         ];
         let pos = Phaser.Utils.Array.GetRandom(positions);
-        let wizard = this.darkWizardGroup.create(pos.x, pos.y, 'dark wizard');
-        wizard.setScale(this.cyclopsSCALE * 1.5);
-        wizard.setActive(true)
-        wizard.setVisible(true)
-        wizard.body.setAllowGravity(false);
-        wizard.hitsLeft = this.darkWizardHitsToDestroy*Math.floor(this.level/5);
-    }
-
-    spawnCyclops() {
-        let positions = [
-            { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
-            { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
-            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(-50, 0) },
-            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(this.mapHeight, this.mapHeight + 50) }
-        ];
-        let pos = Phaser.Utils.Array.GetRandom(positions);
-        let cyclops = this.cyclopsGroup.create(pos.x, pos.y, 'cyclops');
-        cyclops.setScale(this.cyclopsSCALE);
-        cyclops.setActive(true);
-        cyclops.setVisible(true);
-        cyclops.body.setAllowGravity(false);
-        cyclops.hitsLeft = this.cyclopsHitsToDestroy;
-    }
-
-    spawnSpider() {
-        let positions = [
-            { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
-            { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
-            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(-50, 0) },
-            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(this.mapHeight, this.mapHeight + 50) }
-        ];
-        let pos = Phaser.Utils.Array.GetRandom(positions);
-        let spider = this.spiderGroup.create(pos.x, pos.y, 'spider');
-        spider.setScale(this.spiderSCALE);
-        spider.setActive(true);
-        spider.setVisible(true);
-        spider.body.setAllowGravity(false);
-        spider.hitsLeft = this.spiderHitsToDestory;
+        let enemy = enemyGroup.create(pos.x, pos.y, imageKey);
+        enemy.setScale(scale);
+        enemy.setActive(true);
+        enemy.setVisible(true);
+        enemy.body.setAllowGravity(false);
+        enemy.hitsLeft = hitsToDestroy
     }
 
     enemyDeath(enemy) {
-        let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
-        collectable.setActive(true);
-        collectable.setVisible(true);
-        collectable.body.setAllowGravity(false);
-        collectable.setScale(.2);
+        // determine drop type based on random chance
+        let dropType = Phaser.Math.Between(0, 100);
+
+        // 80%-90% droprate for upgrade collectable, 10%-20% droprate for health
+        if (dropType < 90) {
+            let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
+            collectable.setActive(true);
+            collectable.setVisible(true);
+            collectable.body.setAllowGravity(false);
+            collectable.setScale(.2);
+        }
+        else {
+            let healthCollectable = this.healthGroup.create(enemy.x, enemy.y, 'healthCollectable');
+            healthCollectable.setActive(true);
+            healthCollectable.setVisible(true);
+            healthCollectable.body.setAllowGravity(false);
+            healthCollectable.setScale(0.75);
+
+            // Tween to fade out the health collectable over 10 seconds
+            this.tweens.add({
+                targets: healthCollectable,
+                alpha: 0,
+                duration: 7000,
+                onComplete: () => {
+                    healthCollectable.destroy();
+                }
+            });
+        }
+        
     }
 
     hitEnemy(bullet, enemy) {
