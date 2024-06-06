@@ -141,7 +141,7 @@ class Wizard extends Phaser.Scene {
         //how many bullets get shot each click
         this.numBullets = 1;
         //maximum number of bullets that can be on screen at a time
-        this.maxBullets = 5;
+        this.maxBullets = 6;
         //amount of score gained per collectable pickup
         this.scoreGainPerCollectable = 10;
         this.collectableSpeed = 0;
