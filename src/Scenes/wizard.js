@@ -19,7 +19,10 @@ class Wizard extends Phaser.Scene {
                     this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", apply: () => this.maxHealth += 2, tile: "health_refill_tile"}
+            { name: "Fountain of Life Amplification", apply: () => {
+                this.maxHealth += 2,
+                this.playerHealth+=2
+            }, tile: "health_refill_tile"}
         ];
     }
     //send player to game over scene
@@ -99,6 +102,8 @@ class Wizard extends Phaser.Scene {
         this.load.image("player", "Tiles/tile_0084.png"); // Load player sprite
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         this.load.image("dark wizard", "Tiles/tile_0111.png");//load dark wizard pricture
+        this.load.image("spider", "Tiles/tile_0122.png"); //load spider
+        this.load.image("collectable", 'Tiles/laserBlue08.png')
         this.load.image("collectable", 'Tiles/laserBlue08.png');
         this.load.image("damage_potion_tile", "Tiles/tile_0115.png");
         this.load.image("speed_potion_tile", "Tiles/tile_0113.png");
@@ -108,6 +113,14 @@ class Wizard extends Phaser.Scene {
         this.load.image("health_potion_tile", "Tiles/tile_0114.png");
         this.load.image("mana_tile", "Tiles/tile_0116.png");
         this.load.image("health_refill_tile", "Tiles/tile_0020.png");
+        this.load.image("collectable", 'Tiles/laserBlue08.png');
+        this.load.audio("shoot", "Audio/laserLarge_000.ogg");
+        this.load.audio("levelUp", "Audio/powerUp11.ogg");
+        this.load.audio("boss", "Audio/spaceEngineLarge_000.ogg");
+        this.load.audio("hit", "Audio/lowDown.ogg");
+        this.load.audio("die", "Audio/slime_001.ogg");
+        this.load.audio("collect", "Audio/powerUp7.ogg");
+
         this.init();
         this.setPlayerInfoText();
     }
@@ -142,7 +155,7 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.enemyDamage = 1;
         this.invincibilityDuration = 300;
-        this.darkWizardHitsToDestroy = 20;
+        this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
         this.spiderSpeed = 80;
         this.spiderHitsToDestory = 1;
@@ -204,13 +217,13 @@ class Wizard extends Phaser.Scene {
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // Spawn an enemy cyclops 
-        this.time.addEvent({
+        this.cyclopsSpawner = this.time.addEvent({
             delay: this.cyclopsSpawnRate,
             callback: this.spawnCyclops,
             callbackScope: this,
             loop: true
         });
-        this.time.addEvent({
+        this.spiderSpawner = this.time.addEvent({
             delay: this.spiderSpawnRate,
             callback: this.spawnSpider,
             callbackScope: this,
@@ -247,6 +260,9 @@ class Wizard extends Phaser.Scene {
         this.physics.add.overlap(my.sprite.player, this.collectableGroup, (player, collectable) => {
             collectable.destroy();
             this.playerScore += this.scoreGainPerCollectable;
+            this.sound.play('collect', {
+                volume: .1
+            });
         });
 
         // debug key listener (assigned to F key)
@@ -357,13 +373,16 @@ class Wizard extends Phaser.Scene {
 
     //function called whenever player levels up
     levelUp() {
+        this.cyclopsSpawner.delay*=.90;
+        this.spiderSpawner.delay*=.95;
         this.level += 1;
         this.playerScore = 0;
         this.scoreToLevel *= 1.25;
-        this.spiderSpawnRate *= 0.8;
-        this.cyclopsSpawnRate *= 0.8;
+        this.sound.play('levelUp', {
+            volume: .3
+        });
         //every 5 levels spawn that many dark wizards
-        if (this.level % 5===0) {
+        if (this.level % 5 === 0) {
             for (let i = 0; i < Math.floor(this.level / 5); i++) {
                 console.log(Math.floor(this.level / 5))
                 this.spawnDarkWizard()
@@ -413,7 +432,8 @@ class Wizard extends Phaser.Scene {
         wizard.setActive(true)
         wizard.setVisible(true)
         wizard.body.setAllowGravity(false);
-        wizard.hitsLeft = this.darkWizardHitsToDestroy;
+        wizard.hitsLeft = this.darkWizardHitsToDestroy*Math.floor(this.level/5);
+        console.log(wizard.hitsLeft);
     }
 
     spawnCyclops() {
@@ -474,9 +494,16 @@ class Wizard extends Phaser.Scene {
     playerHitEnemy() {
         if (!this.isInvincible) {
             this.playerHealth -= this.enemyDamage;
+
             if (this.playerHealth <= 0) {
+                this.sound.play('die', {
+                    volume: .3
+                });
                 this.gameOver(this.level);
             } else {
+                this.sound.play('hit', {
+                    volume: .3
+                });
                 this.isInvincible = true;
                 my.sprite.player.setTint(0xffffff); // Change color for invincibility. This does not work so we can just change this to audio later
                 this.time.delayedCall(this.invincibilityDuration, () => {
@@ -487,5 +514,43 @@ class Wizard extends Phaser.Scene {
         }
     }
 
+    //send player to game over scene
+    gameOver(level) {
+        //reset text on side of game
+        document.getElementById('description').innerHTML = `<p></p>`
+        this.scene.start('GameOverScene', { level: level });
+
+    }
+    //code for emitting a bullet
+    shootBullet(pointer) {
+        for (let i = 0; i < this.numBullets; i++) {
+            // Calculate delay for each bullet
+            let delay = i * 100; // Delay each bullet by 100ms incrementally
+
+            this.time.delayedCall(delay, () => {
+                let player = my.sprite.player;
+                let bullet = this.bullets.get(player.x, player.y);
+                if (bullet) {
+                    bullet.displayWidth = bullet.width * this.bulletScale;
+                    bullet.displayHeight = bullet.height * this.bulletScale;
+
+                    bullet.setActive(true);
+                    bullet.setVisible(true);
+
+                    // Calculate direction vector from player to pointer
+                    let direction = new Phaser.Math.Vector2(pointer.worldX - player.x, pointer.worldY - player.y);
+                    direction.normalize();
+
+                    // Set bullet velocity based on direction
+                    let bulletSpeed = this.bulletSpeed;
+                    bullet.body.velocity.x = direction.x * bulletSpeed;
+                    bullet.body.velocity.y = direction.y * bulletSpeed;
+                    this.sound.play('shoot', {
+                        volume: 0.1
+                    });
+                }
+            }, [], this);
+        }
+    }
 
 }
