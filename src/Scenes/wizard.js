@@ -384,14 +384,12 @@ class Wizard extends Phaser.Scene {
         //every 5 levels spawn that many dark wizards
         if (this.level % 5 === 0) {
             for (let i = 0; i < Math.floor(this.level / 5); i++) {
-                console.log(Math.floor(this.level / 5))
                 this.spawnDarkWizard()
             }
         }
 
         // Ensure we have enough upgrades to choose from
         if (this.upgrades.length < 2) {
-            console.error("Not enough upgrades available.");
             return;
         }
 
@@ -433,7 +431,6 @@ class Wizard extends Phaser.Scene {
         wizard.setVisible(true)
         wizard.body.setAllowGravity(false);
         wizard.hitsLeft = this.darkWizardHitsToDestroy*Math.floor(this.level/5);
-        console.log(wizard.hitsLeft);
     }
 
     spawnCyclops() {
