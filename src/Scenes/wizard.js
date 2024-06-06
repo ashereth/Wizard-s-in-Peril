@@ -4,6 +4,7 @@ class Wizard extends Phaser.Scene {
         this.gameOver = this.gameOver.bind(this);
         this.cyclopsGroup = null;
         this.isInvincible = false;
+        this.isBossMusicPlayer = false;
 
         // define the possible upgrades
         this.upgrades = [
@@ -174,7 +175,8 @@ class Wizard extends Phaser.Scene {
             maxSize: 1000
         });
     }
-    create() {
+    create() { 
+        this.bossMusic = this.sound.add('boss', { loop: true, volume: 0.3 });
 
         this.map = this.add.tilemap("Background-Map", 16, 16, 30, 30);
         this.tileset = this.map.addTilesetImage("rogue like tiles", "tilemap_tiles");
@@ -360,6 +362,19 @@ class Wizard extends Phaser.Scene {
                 spider.setVelocity(direction.x * this.spiderSpeed, direction.y * this.spiderSpeed);
             }
         }, this);
+
+        //play or stop the boss music based on dark wizard presence
+        if (this.darkWizardGroup.countActive(true) > 0) {
+            if (!this.isBossMusicPlaying) {
+                this.bossMusic.play();
+                this.isBossMusicPlaying = true;
+            }
+        } else {
+            if (this.isBossMusicPlaying) {
+                this.bossMusic.stop();
+                this.isBossMusicPlaying = false;
+            }
+        }
     }
 
     setPlayerInfoText() {
