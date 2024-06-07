@@ -137,6 +137,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("iFrameTile", 'Tiles/tile_0102.png');
         this.load.image("greenXP", 'Tiles/tile_0108.png');
         this.load.image("rats", "Tiles/tile_0123.png");
+        this.load.audio("irishBay", "Audio/irish-bay-213621.mp3");
         this.init();
         this.setPlayerInfoText();
     }
@@ -214,6 +215,8 @@ class Wizard extends Phaser.Scene {
     }
     create() {
         this.bossMusic = this.sound.add('boss', { loop: true, volume: 0.3 });
+        this.irishBayMusic = this.sound.add('irishBay', { loop: true, volume: 0.1 })
+        this.irishBayMusic.play();
 
         this.map = this.add.tilemap("Background-Map", 16, 16, 30, 30);
         this.tileset = this.map.addTilesetImage("rogue like tiles", "tilemap_tiles");
@@ -429,13 +432,16 @@ class Wizard extends Phaser.Scene {
         //play or stop the boss music based on dark wizard presence
         if (this.darkWizardGroup.countActive(true) > 0) {
             if (!this.isBossMusicPlaying) {
+                this.irishBayMusic.stop();
                 this.bossMusic.play();
                 this.isBossMusicPlaying = true;
             }
         } else {
             if (this.isBossMusicPlaying) {
+                
                 this.bossMusic.stop();
                 this.isBossMusicPlaying = false;
+                this.irishBayMusic.play(); 
             }
         }
         this.collectableGroup.children.each(collectable => {
@@ -628,7 +634,6 @@ class Wizard extends Phaser.Scene {
         bullet.setActive(false);
         bullet.setVisible(false);
         bullet.destroy();
-
         enemy.hitsLeft -= this.damage;
         if (enemy.hitsLeft <= 0) {
             // Enemies spaws consumable when dead
