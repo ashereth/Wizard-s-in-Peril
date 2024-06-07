@@ -5,6 +5,7 @@ class Wizard extends Phaser.Scene {
         this.cyclopsGroup = null;
         this.isInvincible = false;
         this.isBossMusicPlayer = false;
+        this.backgroundMusic = false;
 
         // define the possible upgrades
         this.upgrades = [
@@ -21,13 +22,13 @@ class Wizard extends Phaser.Scene {
             },
             { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
             { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" },
-            // {
-            //     name: "Ethereal Guard", description: "+300ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
-            //         this.invincibilityDuration += 300;
-            //         this.maxHealth -= 3;
-            //         this.playerHealth = this.maxHealth
-            //     }, tile: "iFrameTile"
-            // },
+            {
+                name: "Ethereal Guard", description: "+300ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
+                    this.invincibilityDuration += 300;
+                    this.maxHealth -= 3;
+                    this.playerHealth = this.maxHealth
+                }, tile: "iFrameTile"
+            },
             {
                 name: "Ghostly Gratitude", description: "+20% XP Gain", apply: () => {
                     let increasePercentage = this.scoreGainPerCollectable * 0.2;
@@ -38,10 +39,15 @@ class Wizard extends Phaser.Scene {
     }
     //send player to game over scene
     gameOver(level) {
+        // make sure background music doesn't loop when player restarts game
+        if (this.backgroundMusic) {
+            this.irishBayMusic.stop();
+            this.backgroundMusic = false; // Optional: Clear the reference if needed
+        }
+        
         //reset text on side of game
         document.getElementById('description').innerHTML = `<p></p>`
         this.scene.start('GameOverScene', { level: level });
-
     }
     //code for emitting a bullet
     shootBullet(pointer) {
@@ -224,8 +230,14 @@ class Wizard extends Phaser.Scene {
     }
     create() {
         this.bossMusic = this.sound.add('boss', { loop: true, volume: 0.3 });
-        this.irishBayMusic = this.sound.add('irishBay', { loop: true, volume: 0.1 })
-        this.irishBayMusic.play();
+        
+        // make sure background music doesn't loop everytime player dies
+        if (!this.backgroundMusic) {
+            this.irishBayMusic = this.sound.add('irishBay', { loop: true, volume: 0.1 })
+            this.irishBayMusic.play();
+            this.backgroundMusic = true;
+        }
+        
 
         this.map = this.add.tilemap("Background-Map", 16, 16, 30, 30);
         this.tileset = this.map.addTilesetImage("rogue like tiles", "tilemap_tiles");
@@ -572,6 +584,9 @@ class Wizard extends Phaser.Scene {
             let randomUpgrade = Phaser.Utils.Array.GetRandom(this.upgrades);
             //stop showing bullet scale upgrade after getting it twice
             if (this.bulletScale >= .6 && randomUpgrade.name === 'Projectile Magnification Potion') {
+                continue;
+            }
+            if (this.invincibilityDuration >= .5 && randomUpgrade.name === 'Ethereal Guard') {
                 continue;
             }
             if (!selectedUpgrades.includes(randomUpgrade)) {
