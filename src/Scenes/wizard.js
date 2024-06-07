@@ -136,6 +136,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("knight enemy", 'Tiles/tile_0096.png');
         this.load.image("iFrameTile", 'Tiles/tile_0102.png');
         this.load.image("greenXP", 'Tiles/tile_0108.png');
+        this.load.image("haunt", "Tiles/tile_0121.png");
         this.init();
         this.setPlayerInfoText();
     }
@@ -194,6 +195,10 @@ class Wizard extends Phaser.Scene {
         this.spiderSpawnRate = 2000;
         this.spiderSCALE = .50;
 
+        this.hauntHitsToDestroy = 15;
+        this.hauntScale = 1.0;
+        this.hauntSpeed = 0;
+
 
         // Create a group for bullets
         this.bullets = this.physics.add.group({
@@ -244,6 +249,8 @@ class Wizard extends Phaser.Scene {
 
         this.knightGroup = this.physics.add.group();
 
+        this.hauntGroup = this.physics.add.group();
+
         //new group for spider enemies
         this.spiderGroup = this.physics.add.group();
 
@@ -280,6 +287,8 @@ class Wizard extends Phaser.Scene {
 
         // Add collision detection between bullets and cyclops
         this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitEnemy, null, this);
+        //haunt enemy bullet collision
+        this.physics.add.overlap(this.bullets, this.hauntGroup, this.hitEnemy, null, this);
         //add collision between bullets and wizards
         this.physics.add.overlap(this.bullets, this.darkWizardGroup, this.hitEnemy, null, this);
         //add collision between bullets and spider
@@ -291,7 +300,8 @@ class Wizard extends Phaser.Scene {
 
         // Add collision detection between cyclops and player
         this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitEnemy, null, this);
-
+        //haunt enemy player collision
+        this.physics.add.overlap(my.sprite.player, this.hauntGroup, this.playerHitEnemy, null, this);
         // Add collision detection between knight and player
         this.physics.add.overlap(my.sprite.player, this.knightGroup, this.playerHitEnemy, null, this);
         //add collision between armored enemies and player
@@ -413,6 +423,7 @@ class Wizard extends Phaser.Scene {
 
         //move armored enemies toward player
         this.moveEnemyTowardsPlayer(this.armoredEnemyGroup, this.armoredEnemySpeed);
+        this.moveEnemyTowardsPlayer(this.hauntGroup, this.hauntSpeed);
 
         //play or stop the boss music based on dark wizard presence
         if (this.darkWizardGroup.countActive(true) > 0) {
@@ -486,18 +497,23 @@ class Wizard extends Phaser.Scene {
                 for (let _ = 0; _ < (Phaser.Math.Between(1, 3)); _++) {
                     this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
                 }
-
             } else {
                 this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
             }
             this.knightHitsToDestroy *= 1.2;//increase knight health every level
-
-
         }
+
+        //1/3 chance to spawn a haunt every level in a corner of the map
+        if ((Phaser.Math.Between(0, 100)) > 66) {
+            //whenever a haunt spawns cut player damage in half
+            this.damage /= 2;
+            this.spawnEnemy(this.hauntHitsToDestroy, this.hauntScale, this.hauntGroup, 'haunt');
+        }
+
         //for levels <10 increase spawn rate of regular enemies
         //if(this.level<=10){
-        this.cyclopsSpawner.delay *= .90;
-        this.spiderSpawner.delay *= .95;
+        //this.cyclopsSpawner.delay *= .90;
+        //this.spiderSpawner.delay *= .95;
         //}
 
         //reset player score
@@ -549,12 +565,24 @@ class Wizard extends Phaser.Scene {
     }
 
     spawnEnemy(hitsToDestroy, scale, enemyGroup, imageKey) {
-        let positions = [
-            { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
-            { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
-            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(-50, 0) },
-            { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(this.mapHeight, this.mapHeight + 50) }
-        ];
+        let positions;
+        //if the enemy is a haunt spawn it in a corner
+        if (imageKey==='haunt') {
+            positions = [
+                {x: this.mapWidth-100, y: this.mapHeight-80},
+                {x: 100, y: 100},
+                {x: this.mapWidth-100, y: 80},
+                {x: 100, y: this.mapHeight-80}
+            ]
+        } else {
+            positions = [
+                { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
+                { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
+                { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(-50, 0) },
+                { x: Phaser.Math.Between(0, this.mapWidth), y: Phaser.Math.Between(this.mapHeight, this.mapHeight + 50) }
+            ];
+        }
+
         let pos = Phaser.Utils.Array.GetRandom(positions);
         let enemy = enemyGroup.create(pos.x, pos.y, imageKey);
         enemy.setScale(scale);
@@ -565,6 +593,11 @@ class Wizard extends Phaser.Scene {
     }
 
     enemyDeath(enemy) {
+        //console.log(enemy.texture.key);
+        if (enemy.texture.key === 'haunt') {
+            //if haunt was killed increase the damage
+            this.damage *= 2
+        }
         // determine drop type based on random chance
         let dropType = Phaser.Math.Between(0, 100);
 
