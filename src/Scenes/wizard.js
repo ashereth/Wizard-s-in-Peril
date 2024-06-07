@@ -545,6 +545,7 @@ class Wizard extends Phaser.Scene {
             //whenever a haunt spawns cut player damage in half
             this.damage /= 2;
             this.spawnEnemy(this.hauntHitsToDestroy, this.hauntScale, this.hauntGroup, 'haunt');
+            this.hauntHitsToDestroy*=1.5;
         }
 
         //for scaling for levels over 12
@@ -554,7 +555,7 @@ class Wizard extends Phaser.Scene {
            this.spiderHitsToDestory*=1.2
            this.cyclopsHitsToDestroy*=1.2
            this.armoredEnemySpawnRate*=.95
-           this.armoredEnemyHitsToDestroy*=1.5
+           this.armoredEnemyHitsToDestroy*=1.3
            this.hauntHitsToDestroy*=1.5;
         }
 
