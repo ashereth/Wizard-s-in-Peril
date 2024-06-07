@@ -187,7 +187,7 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.enemyDamage = 1;
 
-        this.invincibilityDuration = 150;
+        this.invincibilityDuration = 200;
 
         this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
@@ -525,7 +525,7 @@ class Wizard extends Phaser.Scene {
             } else {
                 this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
             }
-            this.knightHitsToDestroy *= 1.4;//increase knight health every level
+            this.knightHitsToDestroy *= 1.5;//increase knight health every level
         }
 
         //1/3 chance to spawn a haunt every level in a corner of the map
@@ -547,8 +547,8 @@ class Wizard extends Phaser.Scene {
 
         //reset player score
         this.playerScore = 0;
-        //increase time to level up to level 17
-        if (this.level < 17) {
+        //increase time to level up to level 16
+        if (this.level < 16) {
             this.scoreToLevel *= 1.25;
         }
 
