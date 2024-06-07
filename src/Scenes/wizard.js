@@ -21,13 +21,13 @@ class Wizard extends Phaser.Scene {
             },
             { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
             { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" },
-            {
-                name: "Ethereal Guard", description: "+400ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
-                    this.invincibilityDuration += 400;
-                    this.maxHealth -= 3;
-                    this.playerHealth = this.maxHealth
-                }, tile: "iFrameTile"
-            },
+            // {
+            //     name: "Ethereal Guard", description: "+400ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
+            //         this.invincibilityDuration += 400;
+            //         this.maxHealth -= 3;
+            //         this.playerHealth = this.maxHealth
+            //     }, tile: "iFrameTile"
+            // },
             {
                 name: "Ghostly Gratitude", description: "+10% XP Gain", apply: () => {
                     let increasePercentage = this.scoreGainPerCollectable * 0.1;
