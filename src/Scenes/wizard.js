@@ -22,15 +22,15 @@ class Wizard extends Phaser.Scene {
             { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
             { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" },
             // {
-            //     name: "Ethereal Guard", description: "+400ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
-            //         this.invincibilityDuration += 400;
+            //     name: "Ethereal Guard", description: "+300ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
+            //         this.invincibilityDuration += 300;
             //         this.maxHealth -= 3;
             //         this.playerHealth = this.maxHealth
             //     }, tile: "iFrameTile"
             // },
             {
-                name: "Ghostly Gratitude", description: "+10% XP Gain", apply: () => {
-                    let increasePercentage = this.scoreGainPerCollectable * 0.1;
+                name: "Ghostly Gratitude", description: "+20% XP Gain", apply: () => {
+                    let increasePercentage = this.scoreGainPerCollectable * 0.2;
                     this.scoreGainPerCollectable += increasePercentage;
                 }, tile: "greenXP"
             }
@@ -625,43 +625,56 @@ class Wizard extends Phaser.Scene {
         //console.log(enemy.texture.key);
         // determine drop type based on random chance
         let dropType = Phaser.Math.Between(0, 100);
-
-        // 80%-90% droprate for upgrade collectable, 10%-20% droprate for health
-        if (dropType < 100 - this.healthDropChance) {
-            let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
-            collectable.setActive(true);
-            collectable.setVisible(true);
-            collectable.body.setAllowGravity(false);
-            collectable.setScale(.2);
-        }
-        else {
-            let healthCollectable = this.healthGroup.create(enemy.x, enemy.y, 'healthCollectable');
-            healthCollectable.setActive(true);
-            healthCollectable.setVisible(true);
-            healthCollectable.body.setAllowGravity(false);
-            healthCollectable.setScale(0.75);
-
-            // Create a delayed call to start the blinking effect after 3 seconds
-            this.time.delayedCall(3000, () => {
-                this.tweens.add({
-                    targets: healthCollectable,
-                    alpha: 0, // Fade out to completely transparent
-                    ease: 'Linear', // Use a linear easing function for a constant fade rate
-                    duration: 500, // Duration of one fade in/out cycle
-                    repeat: 6, // Number of times the tween repeats
-                    yoyo: true, // Fade back in after fading out
-                    onComplete: () => {
-                        healthCollectable.destroy(); // Destroy the object once the tween is complete
-                    }
-                });
-            }, [], this);
-
-            // Set a timer to destroy the health collectable after 7 seconds
-            this.time.delayedCall(7000, () => {
-                if (healthCollectable.active) {
-                    healthCollectable.destroy();
+        if (enemy.texture.key === 'rats') {
+            console.log(this.hauntGroup.getLength())
+            //if haunt was killed increase the damage
+            
+            //reset bullet image if no more haunts
+            if (this.hauntGroup.getLength() === 1) {
+                this.bullets.defaultKey = 'bullet';
+                this.bullets.createCallback = (bullet) => {
+                    bullet.setAlpha(1);
                 }
-            }, [], this);
+            }
+        }
+        // 80%-90% droprate for upgrade collectable, 10%-20% droprate for health
+        if (!(enemy.texture.key === 'rats')){
+            if (dropType < 100 - this.healthDropChance) {
+                let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
+                collectable.setActive(true);
+                collectable.setVisible(true);
+                collectable.body.setAllowGravity(false);
+                collectable.setScale(.2);
+            }
+            else {
+                let healthCollectable = this.healthGroup.create(enemy.x, enemy.y, 'healthCollectable');
+                healthCollectable.setActive(true);
+                healthCollectable.setVisible(true);
+                healthCollectable.body.setAllowGravity(false);
+                healthCollectable.setScale(0.75);
+
+                // Create a delayed call to start the blinking effect after 3 seconds
+                this.time.delayedCall(3000, () => {
+                    this.tweens.add({
+                        targets: healthCollectable,
+                        alpha: 0, // Fade out to completely transparent
+                        ease: 'Linear', // Use a linear easing function for a constant fade rate
+                        duration: 500, // Duration of one fade in/out cycle
+                        repeat: 6, // Number of times the tween repeats
+                        yoyo: true, // Fade back in after fading out
+                        onComplete: () => {
+                            healthCollectable.destroy(); // Destroy the object once the tween is complete
+                        }
+                    });
+                }, [], this);
+
+                // Set a timer to destroy the health collectable after 7 seconds
+                this.time.delayedCall(7000, () => {
+                    if (healthCollectable.active) {
+                        healthCollectable.destroy();
+                    }
+                }, [], this);
+            }
         }
         if (enemy.texture.key === 'haunt') {
             console.log(this.hauntGroup.getLength())
