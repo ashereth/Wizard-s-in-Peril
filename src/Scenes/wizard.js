@@ -187,7 +187,7 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.enemyDamage = 1;
 
-        this.invincibilityDuration = 300;
+        this.invincibilityDuration = 150;
 
         this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
@@ -519,13 +519,13 @@ class Wizard extends Phaser.Scene {
         //if above level 12 always spawn a knight
         if (this.level > 5 && (Phaser.Math.Between(0, 100)) > 66) {
             if (this.level > 12) {//above level 12 spawn 1-3 knights
-                for (let _ = 0; _ < (Phaser.Math.Between(1, 3)); _++) {
+                for (let _ = 0; _ < (Phaser.Math.Between(2, 5)); _++) {
                     this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
                 }
             } else {
                 this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
             }
-            this.knightHitsToDestroy *= 1.2;//increase knight health every level
+            this.knightHitsToDestroy *= 1.4;//increase knight health every level
         }
 
         //1/3 chance to spawn a haunt every level in a corner of the map
@@ -535,11 +535,15 @@ class Wizard extends Phaser.Scene {
             this.spawnEnemy(this.hauntHitsToDestroy, this.hauntScale, this.hauntGroup, 'haunt');
         }
 
-        //for levels <10 increase spawn rate of regular enemies
-        //if(this.level<=10){
-        //this.cyclopsSpawner.delay *= .80;
-        //this.spiderSpawner.delay *= .85;
-        //}
+        //for scaling for levels over 12
+        if(this.level>=12){
+           this.cyclopsSpawner.delay *= .90;
+           this.spiderSpawner.delay *= .95;
+           this.spiderHitsToDestory*=1.2
+           this.cyclopsHitsToDestroy*=1.2
+           this.armoredEnemySpawnRate*=.95
+           this.armoredEnemyHitsToDestroy*=1.5
+        }
 
         //reset player score
         this.playerScore = 0;
@@ -558,7 +562,7 @@ class Wizard extends Phaser.Scene {
             for (let i = 0; i < Math.floor(this.level / 5); i++) {
                 this.spawnEnemy(this.darkWizardHitsToDestroy, this.cyclopsSCALE * 1.5, this.darkWizardGroup, 'dark wizard')
             }
-            this.darkWizardHitsToDestroy *= 1.5;
+            this.darkWizardHitsToDestroy *= 2;
         }
 
         // Select two distinct random upgrades
