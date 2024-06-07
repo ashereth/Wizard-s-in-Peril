@@ -543,6 +543,7 @@ class Wizard extends Phaser.Scene {
            this.cyclopsHitsToDestroy*=1.2
            this.armoredEnemySpawnRate*=.95
            this.armoredEnemyHitsToDestroy*=1.5
+           this.hauntHitsToDestroy*=1.5;
         }
 
         //reset player score
