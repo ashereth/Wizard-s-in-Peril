@@ -200,7 +200,9 @@ class Wizard extends Phaser.Scene {
         this.ratSpeed = 40;
         this.ratHitsToDestroy = 1;
         this.ratSCALE = .7;
+        
         this.hauntHitsToDestroy = 15;
+        this.hauntHitsToDestroy = 12;
         this.hauntScale = 1.0;
         this.hauntSpeed = 0;
 
@@ -209,6 +211,9 @@ class Wizard extends Phaser.Scene {
         this.bullets = this.physics.add.group({
             defaultKey: 'bullet',
             maxSize: this.maxBullets,
+            createCallback: (bullet) => {
+                bullet.setAlpha(1); // Set transparency to 10%
+            }
         });
         //group for wizard bullets
         this.darkWizardBullets = this.physics.add.group({
@@ -524,7 +529,7 @@ class Wizard extends Phaser.Scene {
         }
 
         //1/3 chance to spawn a haunt every level in a corner of the map
-        if ((Phaser.Math.Between(0, 100)) > 66) {
+        if ((Phaser.Math.Between(0, 100)) > 0) {
             //whenever a haunt spawns cut player damage in half
             this.damage /= 2;
             this.spawnEnemy(this.hauntHitsToDestroy, this.hauntScale, this.hauntGroup, 'haunt');
@@ -532,8 +537,8 @@ class Wizard extends Phaser.Scene {
 
         //for levels <10 increase spawn rate of regular enemies
         //if(this.level<=10){
-        //this.cyclopsSpawner.delay *= .90;
-        //this.spiderSpawner.delay *= .95;
+        //this.cyclopsSpawner.delay *= .80;
+        //this.spiderSpawner.delay *= .85;
         //}
 
         //reset player score
@@ -587,13 +592,17 @@ class Wizard extends Phaser.Scene {
     spawnEnemy(hitsToDestroy, scale, enemyGroup, imageKey) {
         let positions;
         //if the enemy is a haunt spawn it in a corner
-        if (imageKey==='haunt') {
+        if (imageKey === 'haunt') {
             positions = [
-                {x: this.mapWidth-100, y: this.mapHeight-80},
-                {x: 100, y: 100},
-                {x: this.mapWidth-100, y: 80},
-                {x: 100, y: this.mapHeight-80}
+                { x: this.mapWidth - 100, y: this.mapHeight - 80 },
+                { x: 100, y: 100 },
+                { x: this.mapWidth - 100, y: 80 },
+                { x: 100, y: this.mapHeight - 80 }
             ]
+            //change bullet image to show that its weaker
+            this.bullets.createCallback = (bullet) => {
+                bullet.setAlpha(.4);
+            }
         } else {
             positions = [
                 { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
@@ -614,10 +623,6 @@ class Wizard extends Phaser.Scene {
 
     enemyDeath(enemy) {
         //console.log(enemy.texture.key);
-        if (enemy.texture.key === 'haunt') {
-            //if haunt was killed increase the damage
-            this.damage *= 2
-        }
         // determine drop type based on random chance
         let dropType = Phaser.Math.Between(0, 100);
 
@@ -657,6 +662,18 @@ class Wizard extends Phaser.Scene {
                     healthCollectable.destroy();
                 }
             }, [], this);
+        }
+        if (enemy.texture.key === 'haunt') {
+            console.log(this.hauntGroup.getLength())
+            //if haunt was killed increase the damage
+            this.damage *= 2
+            //reset bullet image if no more haunts
+            if (this.hauntGroup.getLength() === 1) {
+                this.bullets.defaultKey = 'bullet';
+                this.bullets.createCallback = (bullet) => {
+                    bullet.setAlpha(1);
+                }
+            }
         }
 
     }
