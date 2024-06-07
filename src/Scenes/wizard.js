@@ -9,19 +9,31 @@ class Wizard extends Phaser.Scene {
         // define the possible upgrades
         this.upgrades = [
             { name: 'Damage Potion', description: "+1 Damage", apply: () => this.damage += 1, tile: "damage_potion_tile" },
-            { name: 'Speed Potion', description: "+0.5 Speed", apply: () => this.playerSpeed += 0.5, tile: "speed_potion_tile" },
+            { name: 'Speed Potion', description: "+0.25 Speed",apply: () => this.playerSpeed += 0.25, tile: "speed_potion_tile" },
             { name: 'Hasty Projectiles Potion', description: "+50 Projectile Speed", apply: () => this.bulletSpeed += 50, tile: "hasty_tile" },
             { name: 'Projectile Magnification Potion', description: "+0.4 Projectile Size", apply: () => this.bulletScale += 0.4, tile: "project_tile" },
             { name: 'Tome of Burst Shot', description: "+1 Projectile Per Shot", apply: () => this.numBullets += 1, tile: "burst_tile" },
-            //{ name: 'Elixir of Health Restoration', description: "Refill to Full Health", apply: () => this.playerHealth = this.maxHealth, tile: "health_potion_tile"},
             {
                 name: 'Tome of Mana Fortification', description: "+3 Max Projectiles", apply: () => {
-                    this.maxBullets += 3//increase max bullets that can be spawned
-                    this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
+                    this.maxBullets += 3; //increase max bullets that can be spawned
+                    this.bullets.maxSize = this.maxBullets; //change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
-            { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" }
+            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile"},
+            { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet"},
+            {
+                name: "Ethereal Guard", description: "+400ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
+                    this.invincibilityDuration += 400;
+                    this.maxHealth -= 3;
+                    this.playerHealth = this.maxHealth
+                }, tile: "iFrameTile" 
+            },
+            {
+                name: "Ghostly Gratitude", description: "+10% XP Gain", apply: () => {
+                    let increasePercentage = this.scoreGainPerCollectable * 0.1;
+                    this.scoreGainPerCollectable += increasePercentage;
+                }, tile: "greenXP"
+            }
         ];
     }
     //send player to game over scene
@@ -122,6 +134,8 @@ class Wizard extends Phaser.Scene {
         this.load.image('magnet', "Tiles/tile_0092.png");
         this.load.image("armored enemy", 'Tiles/tile_0087.png');
         this.load.image("knight enemy", 'Tiles/tile_0096.png');
+        this.load.image("iFrameTile", 'Tiles/tile_0102.png');
+        this.load.image("greenXP", 'Tiles/tile_0108.png');
         this.init();
         this.setPlayerInfoText();
     }
@@ -148,7 +162,7 @@ class Wizard extends Phaser.Scene {
 
         this.mapWidth = 16 * 30;
         this.mapHeight = 16 * 30;
-        this.playerSpeed = 1.5;
+        this.playerSpeed = 1.25;
         this.SCALE = .75;
 
         this.cyclopsSCALE = 1.25;
@@ -168,7 +182,7 @@ class Wizard extends Phaser.Scene {
         this.damage = 1;
         this.enemyDamage = 1;
 
-        this.invincibilityDuration = 400;
+        this.invincibilityDuration = 300;
 
         this.darkWizardHitsToDestroy = 50;
         this.wizardSpeed = 20;
@@ -555,15 +569,27 @@ class Wizard extends Phaser.Scene {
             healthCollectable.body.setAllowGravity(false);
             healthCollectable.setScale(0.75);
 
-            // Tween to fade out the health collectable over 10 seconds
-            this.tweens.add({
-                targets: healthCollectable,
-                alpha: 0,
-                duration: 7000,
-                onComplete: () => {
+            // Create a delayed call to start the blinking effect after 3 seconds
+            this.time.delayedCall(3000, () => {
+                this.tweens.add({
+                    targets: healthCollectable,
+                    alpha: 0, // Fade out to completely transparent
+                    ease: 'Linear', // Use a linear easing function for a constant fade rate
+                    duration: 500, // Duration of one fade in/out cycle
+                    repeat: 6, // Number of times the tween repeats
+                    yoyo: true, // Fade back in after fading out
+                    onComplete: () => {
+                        healthCollectable.destroy(); // Destroy the object once the tween is complete
+                    }
+                });
+            }, [], this);
+
+            // Set a timer to destroy the health collectable after 7 seconds
+            this.time.delayedCall(7000, () => {
+                if (healthCollectable.active) {
                     healthCollectable.destroy();
                 }
-            });
+            }, [], this);
         }
 
     }
