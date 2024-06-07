@@ -136,6 +136,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("knight enemy", 'Tiles/tile_0096.png');
         this.load.image("iFrameTile", 'Tiles/tile_0102.png');
         this.load.image("greenXP", 'Tiles/tile_0108.png');
+        this.load.image("rats", "Tiles/tile_0123.png");
         this.init();
         this.setPlayerInfoText();
     }
@@ -194,6 +195,10 @@ class Wizard extends Phaser.Scene {
         this.spiderSpawnRate = 2000;
         this.spiderSCALE = .50;
 
+        this.ratSpeed = 40;
+        this.ratHitsToDestroy = 1;
+        this.ratSCALE = .7;
+
 
         // Create a group for bullets
         this.bullets = this.physics.add.group({
@@ -244,6 +249,8 @@ class Wizard extends Phaser.Scene {
 
         this.knightGroup = this.physics.add.group();
 
+        this.ratGroup = this.physics.add.group();
+
         //new group for spider enemies
         this.spiderGroup = this.physics.add.group();
 
@@ -288,6 +295,8 @@ class Wizard extends Phaser.Scene {
         this.physics.add.overlap(this.bullets, this.armoredEnemyGroup, this.hitEnemy, null, this);
         //add collision between bullets and knights
         this.physics.add.overlap(this.bullets, this.knightGroup, this.hitEnemy, null, this);
+        //add collision between bullets and rats
+        this.physics.add.overlap(this.bullets, this.ratGroup, this.hitEnemy, null, this);
 
         // Add collision detection between cyclops and player
         this.physics.add.overlap(my.sprite.player, this.cyclopsGroup, this.playerHitEnemy, null, this);
@@ -296,8 +305,8 @@ class Wizard extends Phaser.Scene {
         this.physics.add.overlap(my.sprite.player, this.knightGroup, this.playerHitEnemy, null, this);
         //add collision between armored enemies and player
         this.physics.add.overlap(my.sprite.player, this.armoredEnemyGroup, this.playerHitEnemy, null, this);
-
-
+        // Add collision detection between rats and player
+        this.physics.add.overlap(my.sprite.player, this.ratGroup, this.playerHitEnemy, null, this);
         //add collision between wizards and player
         this.physics.add.overlap(my.sprite.player, this.darkWizardGroup, this.playerHitEnemy, null, this);
 
@@ -414,6 +423,9 @@ class Wizard extends Phaser.Scene {
         //move armored enemies toward player
         this.moveEnemyTowardsPlayer(this.armoredEnemyGroup, this.armoredEnemySpeed);
 
+        //move rats towards player
+        this.moveEnemyTowardsPlayer(this.ratGroup, this.ratSpeed);
+
         //play or stop the boss music based on dark wizard presence
         if (this.darkWizardGroup.countActive(true) > 0) {
             if (!this.isBossMusicPlaying) {
@@ -467,6 +479,10 @@ class Wizard extends Phaser.Scene {
     //function called whenever player levels up
     levelUp() {
         this.level += 1;
+        // rat wave every 7 rounds
+        if (this.level % 7 === 0) {
+            this.spawnRatsInCircle();
+        }
         //add a new enemy spawner at level 10
         if (this.level === 10) {
             //decrease health drop chance
@@ -685,4 +701,27 @@ class Wizard extends Phaser.Scene {
             }, [], this);
         }
     }
+
+    spawnRatsInCircle() {
+        const numRats = 100 * (this.level/7); // Number of rats to spawn
+        const radius = 400; // Radius of the circle
+        const centerX = my.sprite.player.x;
+        const centerY = my.sprite.player.y;
+    
+        for (let i = 0; i < numRats; i++) {
+            const angle = (2 * Math.PI / numRats) * i;
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+    
+            let rat = this.ratGroup.create(x, y, 'rats');
+            rat.setScale(this.ratSCALE);
+            rat.hitsLeft = this.ratHitsToDestroy;
+            rat.setCollideWorldBounds(true);
+            
+            // Make rats move towards the player
+            const direction = new Phaser.Math.Vector2(centerX - x, centerY - y).normalize();
+            rat.setVelocity(direction.x * this.ratSpeedSpeed, direction.y * this.ratSpeedSpeed); // Adjust speed if necessary
+        }
+    }
+    
 }
