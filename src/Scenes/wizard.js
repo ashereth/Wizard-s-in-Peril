@@ -9,7 +9,7 @@ class Wizard extends Phaser.Scene {
         // define the possible upgrades
         this.upgrades = [
             { name: 'Damage Potion', description: "+1 Damage", apply: () => this.damage += 1, tile: "damage_potion_tile" },
-            { name: 'Speed Potion', description: "+0.5 Speed",apply: () => this.playerSpeed += 0.5, tile: "speed_potion_tile" },
+            { name: 'Speed Potion', description: "+0.5 Speed", apply: () => this.playerSpeed += 0.5, tile: "speed_potion_tile" },
             { name: 'Hasty Projectiles Potion', description: "+50 Projectile Speed", apply: () => this.bulletSpeed += 50, tile: "hasty_tile" },
             { name: 'Projectile Magnification Potion', description: "+0.4 Projectile Size", apply: () => this.bulletScale += 0.4, tile: "project_tile" },
             { name: 'Tome of Burst Shot', description: "+1 Projectile Per Shot", apply: () => this.numBullets += 1, tile: "burst_tile" },
@@ -20,8 +20,8 @@ class Wizard extends Phaser.Scene {
                     this.bullets.maxSize = this.maxBullets;//change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile"},
-            { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet"}
+            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
+            { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" }
         ];
     }
     //send player to game over scene
@@ -189,9 +189,9 @@ class Wizard extends Phaser.Scene {
             defaultKey: "dark wizard bullet",
             maxSize: 1000
         });
-        
+
     }
-    create() {  
+    create() {
         this.bossMusic = this.sound.add('boss', { loop: true, volume: 0.3 });
 
         this.map = this.add.tilemap("Background-Map", 16, 16, 30, 30);
@@ -243,13 +243,13 @@ class Wizard extends Phaser.Scene {
         // Spawn an enemy cyclops 
         this.cyclopsSpawner = this.time.addEvent({
             delay: this.cyclopsSpawnRate,
-            callback: ()=>this.spawnEnemy(this.cyclopsHitsToDestroy, this.cyclopsSCALE, this.cyclopsGroup, 'cyclops'),
+            callback: () => this.spawnEnemy(this.cyclopsHitsToDestroy, this.cyclopsSCALE, this.cyclopsGroup, 'cyclops'),
             callbackScope: this,
             loop: true
         });
         this.spiderSpawner = this.time.addEvent({
             delay: this.spiderSpawnRate,
-            callback: ()=>this.spawnEnemy(this.spiderHitsToDestory, this.spiderSCALE, this.spiderGroup, 'spider'),
+            callback: () => this.spawnEnemy(this.spiderHitsToDestory, this.spiderSCALE, this.spiderGroup, 'spider'),
             callbackScope: this,
             loop: true
         })
@@ -328,9 +328,9 @@ class Wizard extends Phaser.Scene {
         if (this.playerHealth === 0) {
             document.getElementById('description').innerHTML = `<h1>Player Health = 0<h1><h1>Player Score = ${this.playerScore}<h1>`
             this.bossMusic.stop();
-            if(this.isBossMusicPlaying){
+            if (this.isBossMusicPlaying) {
                 this.isBossMusicPlayer = false;
-                
+
             }
             this.gameOver(this.level);
         }
@@ -429,7 +429,7 @@ class Wizard extends Phaser.Scene {
         // }, this);
     }
 
-    moveEnemyTowardsPlayer(enemyGroup, enemySpeed){
+    moveEnemyTowardsPlayer(enemyGroup, enemySpeed) {
         enemyGroup.children.each(enemy => {
             if (enemy.active) {
                 let direction = new Phaser.Math.Vector2(my.sprite.player.x - enemy.x, my.sprite.player.y - enemy.y);
@@ -452,41 +452,43 @@ class Wizard extends Phaser.Scene {
     levelUp() {
         this.level += 1;
         //add a new enemy spawner at level 10
-        if (this.level===10) {
+        if (this.level === 10) {
             //spawner for armored enemy
             this.armoredEnemySpawner = this.time.addEvent({
                 delay: this.armoredEnemySpawnRate,
-                callback: ()=>this.spawnEnemy(this.armoredEnemyHitsToDestroy, this.armoredEnemyScale, this.armoredEnemyGroup, "armored enemy"),
+                callback: () => this.spawnEnemy(this.armoredEnemyHitsToDestroy, this.armoredEnemyScale, this.armoredEnemyGroup, "armored enemy"),
                 callbackScope: this,
                 loop: true
             })
         }
-        //if level is above 5 have a chance to spawn a knight enemy
-        if(this.level>5 && (Phaser.Math.Between(0, 100))>66){
+        //if level is above 5 have a chance to spawn a knight enemy 
+        //if above level 12 always spawn a knight
+        if (this.level > 5 && (Phaser.Math.Between(0, 100)) > 66 || this.level > 12) {
             this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
+            this.knightHitsToDestroy += 20;//increase knight health every level
         }
         //for levels <10 increase spawn rate of regular enemies
-        if(this.level<=10){
-            this.cyclopsSpawner.delay*=.90;
-            this.spiderSpawner.delay*=.95;
-        }
-        
+        //if(this.level<=10){
+        this.cyclopsSpawner.delay *= .90;
+        this.spiderSpawner.delay *= .95;
+        //}
+
         //reset player score
         this.playerScore = 0;
         //increase time to level up to level 20
-        if (this.level<20) {
+        if (this.level < 20) {
             this.scoreToLevel *= 1.25;
         }
-        
+
         this.sound.play('levelUp', {
             volume: .3
         });
         //every 5 levels spawn that many dark wizards
         if (this.level % 5 === 0) {
-            this.cyclopsSpeed*=1.1;
-            this.spiderSpeed*=1.1;
+            this.cyclopsSpeed *= 1.1;
+            this.spiderSpeed *= 1.1;
             for (let i = 0; i < Math.floor(this.level / 5); i++) {
-                this.spawnEnemy(this.darkWizardHitsToDestroy, this.cyclopsSCALE*1.5, this.darkWizardGroup, 'dark wizard')
+                this.spawnEnemy(this.darkWizardHitsToDestroy, this.cyclopsSCALE * 1.5, this.darkWizardGroup, 'dark wizard')
             }
         }
 
@@ -495,7 +497,7 @@ class Wizard extends Phaser.Scene {
         while (selectedUpgrades.length < 2) {
             let randomUpgrade = Phaser.Utils.Array.GetRandom(this.upgrades);
             //stop showing bullet scale upgrade after getting it twice
-            if (this.bulletScale>=.6 && randomUpgrade.name==='Projectile Magnification Potion'){
+            if (this.bulletScale >= .6 && randomUpgrade.name === 'Projectile Magnification Potion') {
                 continue;
             }
             if (!selectedUpgrades.includes(randomUpgrade)) {
@@ -518,7 +520,7 @@ class Wizard extends Phaser.Scene {
         this.scene.resume();
     }
 
-    spawnEnemy(hitsToDestroy, scale, enemyGroup, imageKey){
+    spawnEnemy(hitsToDestroy, scale, enemyGroup, imageKey) {
         let positions = [
             { x: Phaser.Math.Between(-50, 0), y: Phaser.Math.Between(0, this.mapHeight) },
             { x: Phaser.Math.Between(this.mapWidth, this.mapWidth + 50), y: Phaser.Math.Between(0, this.mapHeight) },
@@ -563,7 +565,7 @@ class Wizard extends Phaser.Scene {
                 }
             });
         }
-        
+
     }
 
     hitEnemy(bullet, enemy) {
