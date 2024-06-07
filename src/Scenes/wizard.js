@@ -629,7 +629,6 @@ class Wizard extends Phaser.Scene {
         //console.log(enemy.texture.key);
         // determine drop type based on random chance
         let dropType = Phaser.Math.Between(0, 100);
-
         // 80%-90% droprate for upgrade collectable, 10%-20% droprate for health
         if (dropType < 100 - this.healthDropChance) {
             let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
