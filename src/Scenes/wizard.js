@@ -200,7 +200,7 @@ class Wizard extends Phaser.Scene {
         this.ratSpeed = 40;
         this.ratHitsToDestroy = 1;
         this.ratSCALE = .7;
-        
+
         this.hauntHitsToDestroy = 15;
         this.hauntHitsToDestroy = 12;
         this.hauntScale = 1.0;
@@ -529,7 +529,7 @@ class Wizard extends Phaser.Scene {
         }
 
         //1/3 chance to spawn a haunt every level in a corner of the map
-        if ((Phaser.Math.Between(0, 100)) > 0) {
+        if ((Phaser.Math.Between(0, 100)) > 66) {
             //whenever a haunt spawns cut player damage in half
             this.damage /= 2;
             this.spawnEnemy(this.hauntHitsToDestroy, this.hauntScale, this.hauntGroup, 'haunt');
