@@ -21,13 +21,13 @@ class Wizard extends Phaser.Scene {
             },
             { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
             { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" },
-            // {
-            //     name: "Ethereal Guard", description: "+300ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
-            //         this.invincibilityDuration += 300;
-            //         this.maxHealth -= 3;
-            //         this.playerHealth = this.maxHealth
-            //     }, tile: "iFrameTile"
-            // },
+            {
+                name: "Ethereal Guard", description: "+300ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
+                    this.invincibilityDuration += 300;
+                    this.maxHealth -= 3;
+                    this.playerHealth = this.maxHealth
+                }, tile: "iFrameTile"
+            },
             {
                 name: "Ghostly Gratitude", description: "+20% XP Gain", apply: () => {
                     let increasePercentage = this.scoreGainPerCollectable * 0.2;
@@ -571,6 +571,9 @@ class Wizard extends Phaser.Scene {
             let randomUpgrade = Phaser.Utils.Array.GetRandom(this.upgrades);
             //stop showing bullet scale upgrade after getting it twice
             if (this.bulletScale >= .6 && randomUpgrade.name === 'Projectile Magnification Potion') {
+                continue;
+            }
+            if (this.invincibilityDuration >= .5 && randomUpgrade.name === 'Ethereal Guard') {
                 continue;
             }
             if (!selectedUpgrades.includes(randomUpgrade)) {
