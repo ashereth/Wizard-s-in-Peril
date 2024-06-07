@@ -5,6 +5,7 @@ class Wizard extends Phaser.Scene {
         this.cyclopsGroup = null;
         this.isInvincible = false;
         this.isBossMusicPlayer = false;
+        this.backgroundMusic = false;
 
         // define the possible upgrades
         this.upgrades = [
@@ -38,10 +39,15 @@ class Wizard extends Phaser.Scene {
     }
     //send player to game over scene
     gameOver(level) {
+        // make sure background music doesn't loop when player restarts game
+        if (this.backgroundMusic) {
+            this.irishBayMusic.stop();
+            this.backgroundMusic = false; // Optional: Clear the reference if needed
+        }
+        
         //reset text on side of game
         document.getElementById('description').innerHTML = `<p></p>`
         this.scene.start('GameOverScene', { level: level });
-
     }
     //code for emitting a bullet
     shootBullet(pointer) {
@@ -219,8 +225,14 @@ class Wizard extends Phaser.Scene {
     }
     create() {
         this.bossMusic = this.sound.add('boss', { loop: true, volume: 0.3 });
-        this.irishBayMusic = this.sound.add('irishBay', { loop: true, volume: 0.1 })
-        this.irishBayMusic.play();
+        
+        // make sure background music doesn't loop everytime player dies
+        if (!this.backgroundMusic) {
+            this.irishBayMusic = this.sound.add('irishBay', { loop: true, volume: 0.1 })
+            this.irishBayMusic.play();
+            this.backgroundMusic = true;
+        }
+        
 
         this.map = this.add.tilemap("Background-Map", 16, 16, 30, 30);
         this.tileset = this.map.addTilesetImage("rogue like tiles", "tilemap_tiles");

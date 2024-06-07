@@ -33,6 +33,7 @@ class Credits extends Phaser.Scene {
         this.add.text(this.cameras.main.centerX - 120, this.cameras.main.centerY - 200, "CREDITS TO:", commonStyle);
         this.add.text(this.cameras.main.centerX - 145, this.cameras.main.centerY - 150, "KENNY ASSETS", commonStyle);
         this.add.text(this.cameras.main.centerX - 85, this.cameras.main.centerY - 100, "PIXABAY", commonStyle);
+        this.add.text(this.cameras.main.centerX - 130, this.cameras.main.centerY - 50, "FREEPIK.COM", commonStyle);
         const titleScene = this.add.text(this.cameras.main.centerX - 220, this.cameras.main.centerY + 100, "CLICK TO GO BACK TO TITLE", {
             fontFamily: "Arial",
             fontSize: 32,
