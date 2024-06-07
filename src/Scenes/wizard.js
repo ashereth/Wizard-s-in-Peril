@@ -475,8 +475,8 @@ class Wizard extends Phaser.Scene {
 
         //reset player score
         this.playerScore = 0;
-        //increase time to level up to level 20
-        if (this.level < 20) {
+        //increase time to level up to level 17
+        if (this.level < 17) {
             this.scoreToLevel *= 1.25;
         }
 
