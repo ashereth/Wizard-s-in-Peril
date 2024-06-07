@@ -9,7 +9,7 @@ class Wizard extends Phaser.Scene {
         // define the possible upgrades
         this.upgrades = [
             { name: 'Damage Potion', description: "+1 Damage", apply: () => this.damage += 1, tile: "damage_potion_tile" },
-            { name: 'Speed Potion', description: "+0.25 Speed",apply: () => this.playerSpeed += 0.25, tile: "speed_potion_tile" },
+            { name: 'Speed Potion', description: "+0.25 Speed", apply: () => this.playerSpeed += 0.25, tile: "speed_potion_tile" },
             { name: 'Hasty Projectiles Potion', description: "+50 Projectile Speed", apply: () => this.bulletSpeed += 50, tile: "hasty_tile" },
             { name: 'Projectile Magnification Potion', description: "+0.4 Projectile Size", apply: () => this.bulletScale += 0.4, tile: "project_tile" },
             { name: 'Tome of Burst Shot', description: "+1 Projectile Per Shot", apply: () => this.numBullets += 1, tile: "burst_tile" },
@@ -19,14 +19,14 @@ class Wizard extends Phaser.Scene {
                     this.bullets.maxSize = this.maxBullets; //change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile"},
-            { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet"},
+            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
+            { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" },
             {
                 name: "Ethereal Guard", description: "+400ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
                     this.invincibilityDuration += 400;
                     this.maxHealth -= 3;
                     this.playerHealth = this.maxHealth
-                }, tile: "iFrameTile" 
+                }, tile: "iFrameTile"
             },
             {
                 name: "Ghostly Gratitude", description: "+10% XP Gain", apply: () => {
@@ -141,6 +141,8 @@ class Wizard extends Phaser.Scene {
     }
 
     init() {
+        //chance to drop a health pack
+        this.healthDropChance = 20;
         //set initial player values
         this.playerHealth = 10;
         this.maxHealth = 10;
@@ -467,6 +469,8 @@ class Wizard extends Phaser.Scene {
         this.level += 1;
         //add a new enemy spawner at level 10
         if (this.level === 10) {
+            //decrease health drop chance
+            this.healthDropChance -= 10;
             //spawner for armored enemy
             this.armoredEnemySpawner = this.time.addEvent({
                 delay: this.armoredEnemySpawnRate,
@@ -477,9 +481,18 @@ class Wizard extends Phaser.Scene {
         }
         //if level is above 5 have a chance to spawn a knight enemy 
         //if above level 12 always spawn a knight
-        if (this.level > 5 && (Phaser.Math.Between(0, 100)) > 66 || this.level > 12) {
-            this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
-            this.knightHitsToDestroy += 20;//increase knight health every level
+        if (this.level > 5 && (Phaser.Math.Between(0, 100)) > 66) {
+            if (this.level > 12) {//above level 12 spawn 1-3 knights
+                for (let _ = 0; _ < (Phaser.Math.Between(1, 3)); _++) {
+                    this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
+                }
+
+            } else {
+                this.spawnEnemy(this.knightHitsToDestroy, this.knightScale, this.knightGroup, 'knight enemy')
+            }
+            this.knightHitsToDestroy *= 1.2;//increase knight health every level
+
+
         }
         //for levels <10 increase spawn rate of regular enemies
         //if(this.level<=10){
@@ -504,6 +517,7 @@ class Wizard extends Phaser.Scene {
             for (let i = 0; i < Math.floor(this.level / 5); i++) {
                 this.spawnEnemy(this.darkWizardHitsToDestroy, this.cyclopsSCALE * 1.5, this.darkWizardGroup, 'dark wizard')
             }
+            this.darkWizardHitsToDestroy *= 1.5;
         }
 
         // Select two distinct random upgrades
@@ -555,7 +569,7 @@ class Wizard extends Phaser.Scene {
         let dropType = Phaser.Math.Between(0, 100);
 
         // 80%-90% droprate for upgrade collectable, 10%-20% droprate for health
-        if (dropType < 80) {
+        if (dropType < 100 - this.healthDropChance) {
             let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
             collectable.setActive(true);
             collectable.setVisible(true);
@@ -671,5 +685,4 @@ class Wizard extends Phaser.Scene {
             }, [], this);
         }
     }
-
 }
