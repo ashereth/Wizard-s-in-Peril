@@ -362,6 +362,8 @@ class Wizard extends Phaser.Scene {
             }
         });
 
+        this.pKey = this.input.keyboard.addKey('P');
+
         // debug key listener (assigned to F key)
         // this.input.keyboard.on('keydown-F', function () {
         //     this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
@@ -370,6 +372,23 @@ class Wizard extends Phaser.Scene {
     }
 
     update() {
+        if (Phaser.Input.Keyboard.JustDown(this.pKey)) {
+            this.scene.pause();
+            this.scene.launch('pauseScene', {
+                playerHealth: this.playerHealth,
+                maxHealth: this.maxHealth,
+                level: this.level,
+                bulletSpeed: this.bulletSpeed,
+                bulletScale: this.bulletScale,
+                numBullets: this.numBullets,
+                maxBullets: this.maxBullets,
+                playerSpeed: this.playerSpeed,
+                playerDamage: this.damage,
+                scoreGainPerCollectable: this.scoreGainPerCollectable,
+                collectableSpeed: this.collectableSpeed
+            });
+        }
+        
         //update the score and level text
         this.setPlayerInfoText()
         if (this.playerScore >= this.scoreToLevel) {
@@ -382,7 +401,6 @@ class Wizard extends Phaser.Scene {
             this.bossMusic.stop();
             if (this.isBossMusicPlaying) {
                 this.isBossMusicPlayer = false;
-
             }
             this.gameOver(this.level);
         }
@@ -485,8 +503,9 @@ class Wizard extends Phaser.Scene {
         //         direction.normalize();
         //         healthCollectable.setVelocity(direction.x * this.collectableSpeed, direction.y * this.collectableSpeed);
         //     }
-        // }, this);
+        // }, this);    
     }
+
 
     moveEnemyTowardsPlayer(enemyGroup, enemySpeed) {
         enemyGroup.children.each(enemy => {
