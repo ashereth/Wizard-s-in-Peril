@@ -145,9 +145,6 @@ class Wizard extends Phaser.Scene {
         this.load.image("rats", "Tiles/tile_0123.png");
         this.load.audio("irishBay", "Audio/irish-bay-213621.mp3");
         this.load.image("haunt", "Tiles/tile_0121.png");
-        this.load.image("dirt_01", "Tiles/tile_0121.png");
-        this.load.image("dirt_02", "Tiles/tile_0121.png");
-        this.load.image("dirt_03", "Tiles/tile_0121.png");
         this.init();
         this.setPlayerInfoText();
     }
@@ -306,21 +303,6 @@ class Wizard extends Phaser.Scene {
             callbackScope: this,
             loop: true
         })
-
-        // adding particles for enemy death
-        my.vfx.kill = this.add.particles(0, 0, "kenny-particles", {
-            frame: ['dirt_01.png', 'dirt_02.png'],
-            // TODO: Try: add random: true
-            //random: true,
-            scale: {start: 0.03, end: 0.08},
-            // TODO: Try: maxAliveParticles: 8,
-            maxAliveParticles: 4,
-            lifespan: 350,
-            // TODO: Try: gravityY: -400,
-            gravityY: 0,
-            alpha: {start: 1, end: 0.1}, 
-        });
-        my.vfx.kill.stop();
 
         // Add collision detection between bullets and cyclops
         this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitEnemy, null, this);
@@ -642,10 +624,6 @@ class Wizard extends Phaser.Scene {
     }
 
     enemyDeath(enemy) {
-        my.vfx.kill.startFollow(enemy, enemy.x, enemy.y, false);
-
-        my.vfx.kill.setParticleSpeed(50, 0);
-        
         //console.log(enemy.texture.key);
         if (enemy.texture.key === 'haunt') {
             //if haunt was killed increase the damage
