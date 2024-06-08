@@ -19,7 +19,7 @@ let config = {
     },
     width: 1440,
     height: 900,
-    scene: [Title, Wizard, Controls, Credits, GameOverScene, PopupScene]
+    scene: [Title, Wizard, Controls, Credits, GameOverScene, PopupScene, pauseScene]
 }
 
 var cursors;
