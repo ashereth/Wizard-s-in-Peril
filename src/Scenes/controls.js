@@ -32,7 +32,8 @@ class Controls extends Phaser.Scene {
         this.add.text(this.cameras.main.centerX - 140, this.cameras.main.centerY - 50, "'D' - Move Right", commonStyle);
         this.add.text(this.cameras.main.centerX - 185, this.cameras.main.centerY - 0, "'Mouse Click' - Shoot", commonStyle);
         this.add.text(this.cameras.main.centerX - 207, this.cameras.main.centerY + 50, "Move the Mouse to Aim!", commonStyle);
-        const titleScene = this.add.text(this.cameras.main.centerX - 220, this.cameras.main.centerY + 100, "CLICK TO GO BACK TO TITLE", {
+        this.add.text(this.cameras.main.centerX - 160, this.cameras.main.centerY + 100, "Press 'P' to Pause!", commonStyle);
+        const titleScene = this.add.text(this.cameras.main.centerX - 220, this.cameras.main.centerY + 150, "CLICK TO GO BACK TO TITLE", {
             fontFamily: "Arial",
             fontSize: 32,
             color: "#55FF55"
