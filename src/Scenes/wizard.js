@@ -309,7 +309,6 @@ class Wizard extends Phaser.Scene {
             loop: true
         })
 
-
         // Add collision detection between bullets and cyclops
         this.physics.add.overlap(this.bullets, this.cyclopsGroup, this.hitEnemy, null, this);
         //haunt enemy bullet collision
