@@ -120,8 +120,8 @@ class Wizard extends Phaser.Scene {
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         this.load.image("dark wizard", "Tiles/tile_0111.png");//load dark wizard pricture
         this.load.image("spider", "Tiles/tile_0122.png"); //load spider
-        this.load.image("collectable", 'Tiles/laserBlue08.png')
         this.load.image("collectable", 'Tiles/laserBlue08.png');
+        this.load.image("instakill", 'Tiles/tile_0127.png');
         this.load.image("damage_potion_tile", "Tiles/tile_0115.png");
         this.load.image("speed_potion_tile", "Tiles/tile_0113.png");
         this.load.image("hasty_tile", "Tiles/tile_0130.png");
@@ -130,7 +130,6 @@ class Wizard extends Phaser.Scene {
         this.load.image("healthCollectable", "Tiles/tile_0114.png");
         this.load.image("mana_tile", "Tiles/tile_0116.png");
         this.load.image("health_refill_tile", "Tiles/tile_0020.png");
-        this.load.image("collectable", 'Tiles/laserBlue08.png');
         this.load.audio("shoot", "Audio/laserLarge_000.ogg");
         this.load.audio("levelUp", "Audio/powerUp11.ogg");
         this.load.audio("boss", "Audio/spaceEngineLarge_000.ogg");
@@ -152,6 +151,8 @@ class Wizard extends Phaser.Scene {
     init() {
         //chance to drop a health pack
         this.healthDropChance = 20;
+        //chance to drop instant kill powerup
+        this.instaKill = 5;
         //set initial player values
         this.playerHealth = 10;
         this.maxHealth = 10;
@@ -191,6 +192,8 @@ class Wizard extends Phaser.Scene {
         this.knightSpeed = 10;
 
         this.damage = 1;
+        this.originalDamage = this.damage;
+        this.instaKillActive = false;
         this.enemyDamage = 1;
 
         this.invincibilityDuration = 200;
@@ -285,6 +288,9 @@ class Wizard extends Phaser.Scene {
         // makes group for health pickups
         this.healthGroup = this.physics.add.group();
 
+        // makes group for instant kill powerup
+        this.instaGroup = this.physics.add.group();
+
         // Handle mouse click to shoot
         this.input.on('pointerdown', this.shootBullet, this);
 
@@ -336,10 +342,8 @@ class Wizard extends Phaser.Scene {
         this.physics.add.overlap(my.sprite.player, this.ratGroup, this.playerHitEnemy, null, this);
         //add collision between wizards and player
         this.physics.add.overlap(my.sprite.player, this.darkWizardGroup, this.playerHitEnemy, null, this);
-
         //add collision between spider and player
         this.physics.add.overlap(my.sprite.player, this.spiderGroup, this.playerHitEnemy, null, this);
-
         this.physics.add.overlap(my.sprite.player, this.darkWizardBullets, this.playerHitEnemy, null, this);
 
 
@@ -356,6 +360,29 @@ class Wizard extends Phaser.Scene {
             healthCollectable.destroy();
             if (this.playerHealth < this.maxHealth) {
                 this.playerHealth += 1;
+                this.sound.play('collect', {
+                    volume: .1
+                });
+            }
+        });
+
+        this.physics.add.overlap(my.sprite.player, this.instaGroup, (player, instakill) => {
+            instakill.destroy();
+            
+            if (!this.instaKillActive) {
+                this.instaKillActive = true;
+                this.originalDamage = this.damage;  // store current damage to go back to
+                this.damage *= 10;
+
+                console.log("Instant kill activated!");
+
+                // Set a timer for 10 seconds for the duration of the instant kill power up
+                this.time.delayedCall(10000, () => {
+                    this.damage = this.originalDamage;   //reset to original damage
+                    this.instaKillActive = false;
+                    console.log("Instant kill deactivated.");
+                }, [], this);
+                
                 this.sound.play('collect', {
                     volume: .1
                 });
@@ -536,7 +563,7 @@ class Wizard extends Phaser.Scene {
         //add a new enemy spawner at level 10
         if (this.level === 10) {
             //decrease health drop chance
-            this.healthDropChance -= 10;
+            this.healthDropChance -= 5;
             //spawner for armored enemy
             this.armoredEnemySpawner = this.time.addEvent({
                 delay: this.armoredEnemySpawnRate,
@@ -663,7 +690,7 @@ class Wizard extends Phaser.Scene {
     enemyDeath(enemy) {
         //console.log(enemy.texture.key);
         // determine drop type based on random chance
-        let dropType = Phaser.Math.Between(0, 100);
+        let dropType = Phaser.Math.Between(0, 105);
         if (enemy.texture.key === 'haunt') {
             console.log(this.hauntGroup.getLength())
             //if haunt was killed increase the damage
@@ -676,7 +703,7 @@ class Wizard extends Phaser.Scene {
                 }
             }
         }
-        // 80%-90% droprate for upgrade collectable, 10%-20% droprate for health
+        // 80%-90% droprate for upgrade collectable, 15%-20% droprate for health
         if (!(enemy.texture.key === 'rats')){
             if (dropType < 100 - this.healthDropChance) {
                 let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
@@ -684,6 +711,35 @@ class Wizard extends Phaser.Scene {
                 collectable.setVisible(true);
                 collectable.body.setAllowGravity(false);
                 collectable.setScale(.2);
+            }
+            else if (dropType >= 100){
+                let instaCollectable = this.instaGroup.create(enemy.x, enemy.y, 'instakill');
+                instaCollectable.setActive(true);
+                instaCollectable.setVisible(true);
+                instaCollectable.body.setAllowGravity(false);
+                instaCollectable.setScale(0.75);
+
+                // Create a delayed call to start the blinking effect after 3 seconds
+                this.time.delayedCall(3000, () => {
+                    this.tweens.add({
+                        targets: instaCollectable,
+                        alpha: 0, // Fade out to completely transparent
+                        ease: 'Linear', // Use a linear easing function for a constant fade rate
+                        duration: 500, // Duration of one fade in/out cycle
+                        repeat: 6, // Number of times the tween repeats
+                        yoyo: true, // Fade back in after fading out
+                        onComplete: () => {
+                            instaCollectable.destroy(); // Destroy the object once the tween is complete
+                        }
+                    });
+                }, [], this);
+
+                // Set a timer to destroy the health collectable after 7 seconds
+                this.time.delayedCall(7000, () => {
+                    if (instaCollectable.active) {
+                        instaCollectable.destroy();
+                    }
+                }, [], this);
             }
             else {
                 let healthCollectable = this.healthGroup.create(enemy.x, enemy.y, 'healthCollectable');
