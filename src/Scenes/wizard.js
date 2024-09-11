@@ -34,6 +34,11 @@ class Wizard extends Phaser.Scene {
                     let increasePercentage = this.scoreGainPerCollectable * 0.2;
                     this.scoreGainPerCollectable += increasePercentage;
                 }, tile: "greenXP"
+            },
+            {
+                name: "Magical Spread", description: "3 Projectile Spread", apply: () => {
+                    // activate shootSpread() and deactivate shootBullet()
+                }, tile: "spreadShot"
             }
         ];
     }
@@ -49,6 +54,8 @@ class Wizard extends Phaser.Scene {
         document.getElementById('description').innerHTML = `<p></p>`
         this.scene.start('GameOverScene', { level: level });
     }
+    
+    /*
     //code for emitting a bullet
     shootBullet(pointer) {
         for (let i = 0; i < this.numBullets; i++) {
@@ -77,6 +84,8 @@ class Wizard extends Phaser.Scene {
             }, [], this);
         }
     }
+    */
+
 
     darkWizardShoot() {
         //make the wizards shoot
@@ -120,8 +129,9 @@ class Wizard extends Phaser.Scene {
         this.load.image("cyclops", "Tiles/tile_0109.png");// Load cyclops sprite
         this.load.image("dark wizard", "Tiles/tile_0111.png");//load dark wizard pricture
         this.load.image("spider", "Tiles/tile_0122.png"); //load spider
-        this.load.image("collectable", 'Tiles/laserBlue08.png');
-        this.load.image("instakill", 'Tiles/tile_0127.png');
+        this.load.image("collectable", 'Tiles/laserBlue08.png'); // xp collectable
+        this.load.image("instakill", 'Tiles/tile_0127.png');    // instant kill powerup
+        this.load.image("doublexp", 'Tiles/tile_0089.png');    // double xp powerup
         this.load.image("damage_potion_tile", "Tiles/tile_0115.png");
         this.load.image("speed_potion_tile", "Tiles/tile_0113.png");
         this.load.image("hasty_tile", "Tiles/tile_0130.png");
@@ -141,6 +151,7 @@ class Wizard extends Phaser.Scene {
         this.load.image("knight enemy", 'Tiles/tile_0096.png');
         this.load.image("iFrameTile", 'Tiles/tile_0102.png');
         this.load.image("greenXP", 'Tiles/tile_0108.png');
+        this.load.image("spreadShot", 'Tiles/tile_0041.png');
         this.load.image("rats", "Tiles/tile_0123.png");
         this.load.audio("irishBay", "Audio/irish-bay-213621.mp3");
         this.load.image("haunt", "Tiles/tile_0121.png");
@@ -153,6 +164,8 @@ class Wizard extends Phaser.Scene {
         this.healthDropChance = 20;
         //chance to drop instant kill powerup
         this.instaKill = 5;
+        //chance to drop double xp powerup
+        this.doubleXP = 5;
         //set initial player values
         this.playerHealth = 10;
         this.maxHealth = 10;
@@ -170,6 +183,8 @@ class Wizard extends Phaser.Scene {
         this.maxBullets = 6;
         //amount of score gained per collectable pickup
         this.scoreGainPerCollectable = 10;
+        this.doubleXPActive = false;
+        this.originalXP = this.scoreGainPerCollectable;
         this.collectableSpeed = 0;
 
         this.mapWidth = 16 * 30;
@@ -291,6 +306,9 @@ class Wizard extends Phaser.Scene {
         // makes group for instant kill powerup
         this.instaGroup = this.physics.add.group();
 
+        // makes group for double xp powerup
+        this.doubleGroup = this.physics.add.group();
+
         // Handle mouse click to shoot
         this.input.on('pointerdown', this.shootBullet, this);
 
@@ -381,6 +399,29 @@ class Wizard extends Phaser.Scene {
                     this.damage = this.originalDamage;   //reset to original damage
                     this.instaKillActive = false;
                     console.log("Instant kill deactivated.");
+                }, [], this);
+                
+                this.sound.play('collect', {
+                    volume: .1
+                });
+            }
+        });
+
+        this.physics.add.overlap(my.sprite.player, this.doubleGroup, (player, doublexp) => {
+            doublexp.destroy();
+            
+            if (!this.doubleXPActive) {
+                this.doubleXPActive = true;
+                this.originalXP = this.scoreGainPerCollectable;  // store current xp gain to go back to
+                this.scoreGainPerCollectable *= 2;
+
+                console.log("Double XP activated!");
+
+                // Set a timer for 10 seconds for the duration of the double xp power up
+                this.time.delayedCall(10000, () => {
+                    this.scoreGainPerCollectable = this.originalXP;   //reset to original xp gain
+                    this.doubleXPActive = false;
+                    console.log("Double XP deactivated.");
                 }, [], this);
                 
                 this.sound.play('collect', {
@@ -549,8 +590,10 @@ class Wizard extends Phaser.Scene {
             <h1>Health = ${this.playerHealth}/${this.maxHealth}<h1>
             <h1>Your Level = ${this.level}<h1>
             <h1>%${parseInt((this.playerScore / this.scoreToLevel) * 100)} to level ${this.level + 1}<h1>
-            <h1>Mana = ${this.maxBullets - this.bullets.getLength()}/${this.maxBullets}</h1>`
-
+            <h1>Mana = ${this.maxBullets - this.bullets.getLength()}/${this.maxBullets}</h1>
+            ${this.instaKillActive ? '<h1>Ultimate Damage Activated!</h1>' : ''}
+            ${this.doubleXPActive ? '<h1>Double XP Activated!</h1>' : ''}`;
+            
     }
 
     //function called whenever player levels up
@@ -712,7 +755,7 @@ class Wizard extends Phaser.Scene {
                 collectable.body.setAllowGravity(false);
                 collectable.setScale(.2);
             }
-            else if (dropType >= 100){
+            else if (dropType >= 100 && dropType < 102) {
                 let instaCollectable = this.instaGroup.create(enemy.x, enemy.y, 'instakill');
                 instaCollectable.setActive(true);
                 instaCollectable.setVisible(true);
@@ -738,6 +781,35 @@ class Wizard extends Phaser.Scene {
                 this.time.delayedCall(7000, () => {
                     if (instaCollectable.active) {
                         instaCollectable.destroy();
+                    }
+                }, [], this);
+            }
+            else if (dropType >= 103) {
+                let doubleCollectable = this.doubleGroup.create(enemy.x, enemy.y, 'doublexp');
+                doubleCollectable.setActive(true);
+                doubleCollectable.setVisible(true);
+                doubleCollectable.body.setAllowGravity(false);
+                doubleCollectable.setScale(0.75);
+
+                // Create a delayed call to start the blinking effect after 3 seconds
+                this.time.delayedCall(3000, () => {
+                    this.tweens.add({
+                        targets: doubleCollectable,
+                        alpha: 0, // Fade out to completely transparent
+                        ease: 'Linear', // Use a linear easing function for a constant fade rate
+                        duration: 500, // Duration of one fade in/out cycle
+                        repeat: 6, // Number of times the tween repeats
+                        yoyo: true, // Fade back in after fading out
+                        onComplete: () => {
+                            doubleCollectable.destroy(); // Destroy the object once the tween is complete
+                        }
+                    });
+                }, [], this);
+
+                // Set a timer to destroy the health collectable after 7 seconds
+                this.time.delayedCall(7000, () => {
+                    if (doubleCollectable.active) {
+                        doubleCollectable.destroy();
                     }
                 }, [], this);
             }
@@ -831,7 +903,7 @@ class Wizard extends Phaser.Scene {
         this.scene.start('GameOverScene', { level: level });
 
     }
-    //code for emitting a bullet
+    
     shootBullet(pointer) {
         for (let i = 0; i < this.numBullets; i++) {
             // Calculate delay for each bullet
@@ -862,6 +934,49 @@ class Wizard extends Phaser.Scene {
             }, [], this);
         }
     }
+
+    /*
+    //code for emitting a spread bullet
+    shootSpread(pointer) {
+        const numberBullets = 3;
+        const spreadAngle = 30;
+        
+        for (let i = 0; i < numberBullets; i++) {
+            // Calculate delay for each bullet
+            //let delay = i * 100; // Delay each bullet by 100ms incrementally
+
+            let player = my.sprite.player;
+            let bullet = this.bullets.get(player.x, player.y);
+            if (bullet) {
+                bullet.displayWidth = bullet.width * this.bulletScale;
+                bullet.displayHeight = bullet.height * this.bulletScale;
+
+                bullet.setActive(true);
+                bullet.setVisible(true);
+
+                // Calculate direction vector from player to pointer
+                let baseDirection = new Phaser.Math.Vector2(pointer.worldX - player.x, pointer.worldY - player.y);
+                baseDirection.normalize();
+
+                let baseAngle = Phaser.Math.Angle.Between(player.x, player.y, pointer.worldX, pointer.worldY);
+
+                let bulletSpread = Phaser.Math.DegToRad(spreadAngle); // Convert spread angle to radians
+                let angleOffset = (i - 1) * bulletSpread / (numberBullets - 1); // Spread offset for each bullet (-1 for left, 0 for center, +1 for right)
+
+                let finalAngle = baseAngle + angleOffset;
+                let direction = new Phaser.Math.Vector2(Math.cos(finalAngle), Math.sin(finalAngle));
+
+                // Set bullet velocity based on direction
+                let bulletSpeed = this.bulletSpeed;
+                bullet.body.velocity.x = direction.x * bulletSpeed;
+                bullet.body.velocity.y = direction.y * bulletSpeed;
+                this.sound.play('shoot', {
+                    volume: 0.1
+                });
+            }
+        }
+    }
+    */
 
     spawnRatsInCircle() {
         const numRats = 100 * (this.level/7); // Number of rats to spawn
