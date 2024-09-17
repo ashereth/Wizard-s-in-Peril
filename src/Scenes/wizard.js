@@ -23,21 +23,17 @@ class Wizard extends Phaser.Scene {
             { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
             { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" },
             {
-                name: "Ethereal Guard", description: "+300ms Invincibilty After Taking Damage, -3 Max Health", apply: () => {
-                    this.invincibilityDuration += 300;
-                    this.maxHealth -= 3;
-                    this.playerHealth = this.maxHealth
-                }, tile: "iFrameTile"
-            },
-            {
-                name: "Ghostly Gratitude", description: "+20% XP Gain", apply: () => {
+                name: 'Ghostly Gratitude', description: "+20% XP Gain", apply: () => {
                     let increasePercentage = this.scoreGainPerCollectable * 0.2;
                     this.scoreGainPerCollectable += increasePercentage;
                 }, tile: "greenXP"
             },
             {
-                name: "Magical Spread", description: "3 Projectile Spread", apply: () => {
+                name: 'Magical Spread', description: "3 Projectile Spread", apply: () => {
                     // activate shootSpread() and deactivate shootBullet()
+                    this.input.off('pointerdown', this.shootBullet, this);
+                    this.input.on('pointerdown', this.shootSpread, this);
+                    this.spreadActive = true;
                 }, tile: "spreadShot"
             }
         ];
@@ -54,38 +50,6 @@ class Wizard extends Phaser.Scene {
         document.getElementById('description').innerHTML = `<p></p>`
         this.scene.start('GameOverScene', { level: level });
     }
-    
-    /*
-    //code for emitting a bullet
-    shootBullet(pointer) {
-        for (let i = 0; i < this.numBullets; i++) {
-            // Calculate delay for each bullet
-            let delay = i * 100; // Delay each bullet by 100ms incrementally
-
-            this.time.delayedCall(delay, () => {
-                let player = my.sprite.player;
-                let bullet = this.bullets.get(player.x, player.y);
-                if (bullet) {
-                    bullet.displayWidth = bullet.width * this.bulletScale;
-                    bullet.displayHeight = bullet.height * this.bulletScale;
-
-                    bullet.setActive(true);
-                    bullet.setVisible(true);
-
-                    // Calculate direction vector from player to pointer
-                    let direction = new Phaser.Math.Vector2(pointer.worldX - player.x, pointer.worldY - player.y);
-                    direction.normalize();
-
-                    // Set bullet velocity based on direction
-                    let bulletSpeed = this.bulletSpeed;
-                    bullet.body.velocity.x = direction.x * bulletSpeed;
-                    bullet.body.velocity.y = direction.y * bulletSpeed;
-                }
-            }, [], this);
-        }
-    }
-    */
-
 
     darkWizardShoot() {
         //make the wizards shoot
@@ -161,7 +125,7 @@ class Wizard extends Phaser.Scene {
 
     init() {
         //chance to drop a health pack
-        this.healthDropChance = 20;
+        this.healthDropChance = 15;
         //chance to drop instant kill powerup
         this.instaKill = 5;
         //chance to drop double xp powerup
@@ -175,7 +139,7 @@ class Wizard extends Phaser.Scene {
         this.level = 1;
         //how fast the bullets travel
         this.bulletSpeed = 200;
-        //how large the bullets ares
+        //how large the bullets areas
         this.bulletScale = .2;
         //how many bullets get shot each click
         this.numBullets = 1;
@@ -230,7 +194,7 @@ class Wizard extends Phaser.Scene {
         this.hauntScale = 1.0;
         this.hauntSpeed = 0;
 
-
+        this.spreadActive = false;
         // Create a group for bullets
         this.bullets = this.physics.add.group({
             defaultKey: 'bullet',
@@ -675,9 +639,15 @@ class Wizard extends Phaser.Scene {
             if (this.bulletScale >= .6 && randomUpgrade.name === 'Projectile Magnification Potion') {
                 continue;
             }
-            if (this.invincibilityDuration >= .5 && randomUpgrade.name === 'Ethereal Guard') {
+            // stop showing spread upgrade if already chosen
+            if (this.spreadActive === true && randomUpgrade.name === 'Magical Spread') {
                 continue;
             }
+            /* stop showing extra bullet if already have 5
+            if (this.numBullets >= 5 && randomUpgrade.name === 'Tome of Burst Shot') {
+                continue;
+            }
+                */
             if (!selectedUpgrades.includes(randomUpgrade)) {
                 selectedUpgrades.push(randomUpgrade);
             }
@@ -746,7 +716,7 @@ class Wizard extends Phaser.Scene {
                 }
             }
         }
-        // 80%-90% droprate for upgrade collectable, 15%-20% droprate for health
+        // 80%-90% droprate for upgrade collectable, 10%-15% droprate for health
         if (!(enemy.texture.key === 'rats')){
             if (dropType < 100 - this.healthDropChance) {
                 let collectable = this.collectableGroup.create(enemy.x, enemy.y, 'collectable');
@@ -935,17 +905,16 @@ class Wizard extends Phaser.Scene {
         }
     }
 
-    /*
-    //code for emitting a spread bullet
     shootSpread(pointer) {
-        const numberBullets = 3;
         const spreadAngle = 30;
-        
-        for (let i = 0; i < numberBullets; i++) {
+        let player = my.sprite.player;
+
+        let baseAngle = Phaser.Math.Angle.Between(player.x, player.y, pointer.worldX, pointer.worldY);
+
+        for (let i = 0; i < this.numBullets; i++) {
             // Calculate delay for each bullet
             //let delay = i * 100; // Delay each bullet by 100ms incrementally
-
-            let player = my.sprite.player;
+            
             let bullet = this.bullets.get(player.x, player.y);
             if (bullet) {
                 bullet.displayWidth = bullet.width * this.bulletScale;
@@ -953,16 +922,9 @@ class Wizard extends Phaser.Scene {
 
                 bullet.setActive(true);
                 bullet.setVisible(true);
-
-                // Calculate direction vector from player to pointer
-                let baseDirection = new Phaser.Math.Vector2(pointer.worldX - player.x, pointer.worldY - player.y);
-                baseDirection.normalize();
-
-                let baseAngle = Phaser.Math.Angle.Between(player.x, player.y, pointer.worldX, pointer.worldY);
-
-                let bulletSpread = Phaser.Math.DegToRad(spreadAngle); // Convert spread angle to radians
-                let angleOffset = (i - 1) * bulletSpread / (numberBullets - 1); // Spread offset for each bullet (-1 for left, 0 for center, +1 for right)
-
+                
+                // find offset for each bullet
+                let angleOffset = (i - Math.floor(this.numBullets / 2)) * Phaser.Math.DegToRad(spreadAngle);
                 let finalAngle = baseAngle + angleOffset;
                 let direction = new Phaser.Math.Vector2(Math.cos(finalAngle), Math.sin(finalAngle));
 
@@ -976,7 +938,6 @@ class Wizard extends Phaser.Scene {
             }
         }
     }
-    */
 
     spawnRatsInCircle() {
         const numRats = 100 * (this.level/7); // Number of rats to spawn
