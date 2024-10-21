@@ -395,12 +395,6 @@ class Wizard extends Phaser.Scene {
         });
 
         this.pKey = this.input.keyboard.addKey('P');
-
-        // debug key listener (assigned to F key)
-        // this.input.keyboard.on('keydown-F', function () {
-        //     this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
-        //     this.physics.world.debugGraphic.clear()
-        // }, this)
     }
 
     update() {
