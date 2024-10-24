@@ -1,4 +1,4 @@
 # Wizards in Peril
-Final game for ucsc class cmpm120.
+2D Roguelike game made using Phaser.
 
-Link to playable game [here](https://ashereth.github.io/Wizard-s-in-Peril/)
+Link to the playable game: [here](https://ashereth.github.io/Wizard-s-in-Peril/)
