@@ -153,7 +153,7 @@ class Wizard extends Phaser.Scene {
 
         this.mapWidth = 16 * 30;
         this.mapHeight = 16 * 30;
-        this.playerSpeed = 1.25;
+        this.playerSpeed = 125;
         this.SCALE = .75;
 
         this.cyclopsSCALE = 1.25;
@@ -189,8 +189,7 @@ class Wizard extends Phaser.Scene {
         this.ratHitsToDestroy = 1;
         this.ratSCALE = .7;
 
-        this.hauntHitsToDestroy = 15;
-        this.hauntHitsToDestroy = 12;
+        this.hauntHitsToDestroy = 5;
         this.hauntScale = 1.0;
         this.hauntSpeed = 0;
 
@@ -211,7 +210,7 @@ class Wizard extends Phaser.Scene {
 
     }
     create() {
-        this.bossMusic = this.sound.add('boss', { loop: true, volume: 0.3 });
+        this.bossMusic = this.sound.add('boss', { loop: true, volume: 0.2 });
         
         // make sure background music doesn't loop everytime player dies
         if (!this.backgroundMusic) {
@@ -228,6 +227,7 @@ class Wizard extends Phaser.Scene {
         //create player
         my.sprite.player = this.physics.add.sprite(200, 200, "player");
         my.sprite.player.setScale(this.SCALE)
+        my.sprite.player.setCollideWorldBounds(true);
 
         //create camera and zoom in
         // Set world bounds to match the scaled tilemap size
@@ -431,33 +431,41 @@ class Wizard extends Phaser.Scene {
             this.gameOver(this.level);
         }
         //movement controls
+        // 1. Reset velocity (stop moving if no keys are pressed)
+        my.sprite.player.setVelocity(0);
+
+        // 2. Capture input direction
+        let dx = 0;
+        let dy = 0;
+
         if (cursors.left.isDown || this.cursors.left.isDown) {
-            my.sprite.player.x -= this.playerSpeed;
+            dx = -1;
+            // Keep your existing flip/offset logic
             my.sprite.player.scaleX = -1;
             my.sprite.player.body.offset.x = my.sprite.player.width;
-            if (my.sprite.player.x < my.sprite.player.width) {
-                my.sprite.player.x = my.sprite.player.width;
-            }
-        }
-        if (cursors.right.isDown || this.cursors.right.isDown) {
-            my.sprite.player.x += this.playerSpeed;
+        } else if (cursors.right.isDown || this.cursors.right.isDown) {
+            dx = 1;
+            // Keep your existing flip/offset logic
             my.sprite.player.scaleX = 1;
             my.sprite.player.body.offset.x = 0;
-            if (my.sprite.player.x > this.mapWidth - my.sprite.player.width) {
-                my.sprite.player.x = this.mapWidth - my.sprite.player.width;
-            }
         }
+
         if (cursors.up.isDown || this.cursors.up.isDown) {
-            my.sprite.player.y -= this.playerSpeed;
-            if (my.sprite.player.y < my.sprite.player.height) {
-                my.sprite.player.y = my.sprite.player.height;
-            }
+            dy = -1;
+        } else if (cursors.down.isDown || this.cursors.down.isDown) {
+            dy = 1;
         }
-        if (cursors.down.isDown || this.cursors.down.isDown) {
-            my.sprite.player.y += this.playerSpeed;
-            if (my.sprite.player.y > this.mapHeight - my.sprite.player.height) {
-                my.sprite.player.y = this.mapHeight - my.sprite.player.height;
-            }
+
+        // 3. Normalize the vector and apply speed
+        // This ensures diagonal movement is the same speed as straight movement
+        if (dx !== 0 || dy !== 0) {
+            let moveVector = new Phaser.Math.Vector2(dx, dy);
+            moveVector.normalize(); 
+            
+            my.sprite.player.setVelocity(
+                moveVector.x * this.playerSpeed, 
+                moveVector.y * this.playerSpeed
+            );
         }
         // Update bullets position
         this.bullets.children.each(bullet => {
