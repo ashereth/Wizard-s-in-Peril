@@ -81,6 +81,12 @@ class Title extends Phaser.Scene {
             color: "#E9EB87"
         });
         creditsScene.setStroke("#000000", 4);
+        const pauseScene = this.add.text(this.cameras.main.centerX - 150, this.cameras.main.centerY + 90, "PRESS 'p' TO PAUSE", {
+            fontFamily: "Arial",
+            fontSize: 32,
+            color: "#E9EB87"
+        });
+        pauseScene.setStroke("#000000", 4);
 
         this.input.once("pointerdown", function () {
             this.scene.stop("Title")

@@ -20,7 +20,7 @@ class Wizard extends Phaser.Scene {
                     this.bullets.maxSize = this.maxBullets; //change the maxsize of the bullets group
                 }, tile: "mana_tile"
             },
-            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => this.maxHealth += 2, tile: "health_refill_tile" },
+            { name: "Fountain of Life Amplification", description: "+2 Max Health", apply: () => { this.maxHealth += 2; this.playerHealth += 2; }, tile: "health_refill_tile" },
             { name: "Magnetism Charm", description: "+1 Collectible Magnet", apply: () => this.collectableSpeed += 10, tile: "magnet" },
             {
                 name: 'Ghostly Gratitude', description: "+20% XP Gain", apply: () => {
@@ -34,6 +34,9 @@ class Wizard extends Phaser.Scene {
                     this.input.off('pointerdown', this.shootBullet, this);
                     this.input.on('pointerdown', this.shootSpread, this);
                     this.spreadActive = true;
+                    if (this.numBullets < 2) {
+                        this.numBullets = 2;
+        }
                 }, tile: "spreadShot"
             }
         ];
@@ -834,6 +837,17 @@ class Wizard extends Phaser.Scene {
         bullet.setActive(false);
         bullet.setVisible(false);
         bullet.destroy();
+        // Flash the enemy Red (0xFF0000)
+        enemy.setTint(0xFF0000);
+
+        // Clear the red tint after 100ms
+        this.time.delayedCall(100, () => {
+            // Check if enemy still exists before clearing tint
+            if (enemy && enemy.active) {
+                enemy.clearTint();
+            }
+        });
+
         enemy.hitsLeft -= this.damage;
         if (enemy.hitsLeft <= 0) {
             // Enemies spaws consumable when dead
@@ -858,10 +872,10 @@ class Wizard extends Phaser.Scene {
                     volume: .3
                 });
                 this.isInvincible = true;
-                my.sprite.player.setTint(0xffffff); // Change color for invincibility. This does not work so we can just change this to audio later
+                my.sprite.player.setTint(0xFF0000); // Change color for invincibility. This does not work so we can just change this to audio later
                 this.time.delayedCall(this.invincibilityDuration, () => {
                     this.isInvincible = false;
-                    my.sprite.player.clearTint(); // Reset player color. This wouldn't be needed later
+                    my.sprite.player.clearTint(); 
                 }, [], this);
             }
         }
@@ -906,37 +920,43 @@ class Wizard extends Phaser.Scene {
             }, [], this);
         }
     }
-
     shootSpread(pointer) {
         const spreadAngle = 30;
         let player = my.sprite.player;
+        
+        let currentMana = this.maxBullets - this.bullets.getLength();
+        if (currentMana <= 0) return; // No mana, no shoot
+        
+        let shotsToFire = Math.min(this.numBullets, currentMana);
 
         let baseAngle = Phaser.Math.Angle.Between(player.x, player.y, pointer.worldX, pointer.worldY);
 
-        for (let i = 0; i < this.numBullets; i++) {
-            // Calculate delay for each bullet
-            //let delay = i * 100; // Delay each bullet by 100ms incrementally
+        for (let i = 0; i < shotsToFire; i++) {
+            let multiplier = Math.ceil((i + 1) / 2); 
+            if (i % 2 !== 0) {
+            } else if (i !== 0) {
+                 multiplier = -multiplier;
+            } else {
+                 multiplier = 0;
+            }
+
+            let angleOffset = multiplier * Phaser.Math.DegToRad(spreadAngle);
+            let finalAngle = baseAngle + angleOffset;
             
             let bullet = this.bullets.get(player.x, player.y);
             if (bullet) {
                 bullet.displayWidth = bullet.width * this.bulletScale;
                 bullet.displayHeight = bullet.height * this.bulletScale;
-
                 bullet.setActive(true);
                 bullet.setVisible(true);
                 
-                // find offset for each bullet
-                let angleOffset = (i - Math.floor(this.numBullets / 2)) * Phaser.Math.DegToRad(spreadAngle);
-                let finalAngle = baseAngle + angleOffset;
                 let direction = new Phaser.Math.Vector2(Math.cos(finalAngle), Math.sin(finalAngle));
-
-                // Set bullet velocity based on direction
+                
                 let bulletSpeed = this.bulletSpeed;
                 bullet.body.velocity.x = direction.x * bulletSpeed;
                 bullet.body.velocity.y = direction.y * bulletSpeed;
-                this.sound.play('shoot', {
-                    volume: 0.1
-                });
+                
+                this.sound.play('shoot', { volume: 0.1 });
             }
         }
     }
