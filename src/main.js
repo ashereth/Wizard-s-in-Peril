@@ -7,6 +7,12 @@ let config = {
     render: {
         pixelArt: true  // prevent pixel art from getting blurred when scaled
     },
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 1440,
+        height: 900
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -17,8 +23,6 @@ let config = {
             }
         }
     },
-    width: 1440,
-    height: 900,
     scene: [Title, Wizard, Controls, Credits, GameOverScene, PopupScene, pauseScene]
 }
 
